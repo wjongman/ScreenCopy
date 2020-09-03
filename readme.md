@@ -23,10 +23,14 @@ When started for the first time, it will ask to select the hotkey used to activa
 
 #### AutoSave
 When saving a file with autosave enabled, you will not be prompted for a filename, instead the file will be saved in a predefined location with a predefined filename.  
-![Autosave](/images/autosave.png)
+![Autosave](images/autosave.png)
 
 #### Portability
 When started, it will look for the file ScreenCopy.ini in it's program directory, if it is found, it will be used to store settings, else settings will be stored in the registry. 
 
 #### Presets
 Presets to be done.
+
+#### Caveat
+ScreenCopy has no tangible user-interface, when running it is only reachable via the hotkey.
+However, starting an other instance will notice that it is already running and will activate that one instead.
