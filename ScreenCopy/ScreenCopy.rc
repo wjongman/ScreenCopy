@@ -1,0 +1,224 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "atlres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""atlres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\ScreenCopy.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription", "ScreenCopy Module"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "ScreenCopy"
+            VALUE "LegalCopyright", "Copyright 2019"
+            VALUE "OriginalFilename", "ScreenCopy.exe"
+            VALUE "ProductName", "ScreenCopy Module"
+            VALUE "ProductVersion", "1, 0, 0, 1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_HOTKEYDLG DIALOGEX 0, 0, 121, 71
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ScreenCopy"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_HOTKEY,"msctls_hotkey32",WS_BORDER | WS_TABSTOP,6,18,108,14
+    DEFPUSHBUTTON   "OK",IDOK,6,48,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,66,48,50,14
+    LTEXT           "Enter a hot key combination:",IDC_STATIC,6,6,102,8
+    CTEXT           "Hotkey already registered",IDC_WARNING,6,35,108,8
+END
+
+IDD_AUTOSAVEDLG DIALOGEX 0, 0, 270, 186
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Autosave Options"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,150,165,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,213,165,50,14
+    LTEXT           "Directory where snapshots will be &saved:",IDC_STATIC,7,7,132,8
+    EDITTEXT        IDC_EDIT_DIRECTORY,7,18,232,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&>>",IDC_BROWSE,240,18,22,14
+    LTEXT           "&Filename prefix:",IDC_STATIC,7,36,52,8
+    EDITTEXT        IDC_EDIT_PREFIX,7,48,98,14,ES_AUTOHSCROLL
+    LTEXT           "&Digits:",IDC_STATIC,113,36,21,8
+    EDITTEXT        IDC_EDIT_DIGITS,112,48,52,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_SPIN1,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,151,48,11,14
+    LTEXT           "&Next value:",IDC_STATIC,171,36,38,8
+    EDITTEXT        IDC_EDIT_NEXTVALUE,170,48,40,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "&Image type:",IDC_STATIC,217,36,40,8
+    COMBOBOX        IDC_IMAGETYPE,215,48,48,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Next file will be saved as:",IDC_STATIC,7,68,256,29
+    EDITTEXT        IDC_PREVIEW,11,81,247,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX        "When file already exists:",IDC_STATIC,7,100,256,58
+    CONTROL         "&Prompt whether to replace",IDC_PROMPT,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,16,115,101,10
+    CONTROL         "&Overwrite existing file",IDC_REPLACE,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,16,128,86,10
+    CONTROL         "&Automatically rename output file",IDC_RENAME,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,16,141,119,10
+END
+
+IDD_STARTUPDLG DIALOGEX 0, 0, 316, 185
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ScreenCopy"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,205,164,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,259,164,50,14
+    GROUPBOX        "Hotkey",IDC_STATIC,6,6,156,36
+    GROUPBOX        "Autosave",IDC_STATIC,6,48,156,36
+    CONTROL         "",IDC_HOTKEY1,"msctls_hotkey32",WS_DISABLED | WS_BORDER,12,18,80,14
+    GROUPBOX        "Portability",IDC_STATIC,6,90,156,36
+    CONTROL         "Use INI-file for saved settings",IDC_USEINIFILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,105,112,10
+    CONTROL         "Enable Autosave",IDC_ENABLEAUTOSAVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,63,70,10
+    PUSHBUTTON      "Configure...",IDC_CONFIGUREAUTOSAVE,102,60,50,14
+    PUSHBUTTON      "Change...",IDC_CONFIGUREHOTKEY,102,18,50,14
+    GROUPBOX        "Presets",IDC_STATIC,6,132,156,36
+    PUSHBUTTON      "Manage...",IDC_PRESETSCONFIGURE,102,144,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_HOTKEYDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 113
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 63
+    END
+
+    IDD_AUTOSAVEDLG, DIALOG
+    BEGIN
+    END
+
+    IDD_STARTUPDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_HOTKEYDLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_AUTOSAVEDLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_STARTUPDLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "ScreenCopy"
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+

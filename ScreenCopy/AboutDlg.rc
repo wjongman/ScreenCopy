@@ -1,0 +1,79 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "about.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "atlres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "about.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#include ""atlres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 141, 114
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,45,94,50,14
+    GROUPBOX        "",IDC_STATIC,7,33,128,55
+    ICON            IDR_MAINFRAME,IDC_STATIC,9,9,20,20
+    CTEXT           "", IDC_APPNAME,36,15,69,8
+    CTEXT           "Version",IDC_VERSIONSTAMP,12,44,116,8
+    CTEXT           "(c) Willem Jongman",IDC_STATIC,12,59,112,8
+    CONTROL         "<a>http://toptools.org</a>",IDC_SYSLINK,"SysLink",WS_TABSTOP,40,71,63,9
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+STRINGTABLE
+BEGIN
+    IDS_URL_HOMEPAGE        "http://toptools.org"
+    IDS_APPNAME             "ScreenCopy"
+    END
+
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
