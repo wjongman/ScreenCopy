@@ -1,36 +1,36 @@
 # ScreenCopy
-
 A program that can take a snapshot of the screen and either save it to file or copy it to the clipboard.  
 It sits in the background and can be activated with a global hotkey.  
-When active, it shows a sizeable, transparent window that can be accurately positioned by using the mouse or the keyboard arrow-keys.  
+When active it shows a sizeable, transparent window that can be accurately positioned by using the mouse or the keyboard arrow-keys.  
 Frequently used areas can be saved in a preset list, for quick selection later.  
 Autosave features make it easy to capture a sequence of views with a minimum of keystrokes.  
 
 
 
-## Prerequisites:
 
-WTL10, the [Windows Template Library](https://sourceforge.net/projects/wtl/).
-
-## Building:
-
-A Visual Studio 2017 project file is included.
-
-## Usage:
-
+## Features
 #### Hotkey
 When started for the first time, it will ask to select the hotkey used to activate the screengrabber.
 
 #### AutoSave
-When saving a file with autosave enabled, you will not be prompted for a filename, instead the file will be saved in a predefined location with a predefined filename.  
+When saving a file with autosave enabled it will not prompt for a filename, instead the file will be saved in a predefined location with a predefined filename.
+
 ![Autosave](images/autosave.png)
 
 #### Portability
-When started, it will look for the file ScreenCopy.ini in it's program directory, if it is found, it will be used to store settings, else settings will be stored in the registry. 
+When starting, it will look for the file ScreenCopy.ini in it's program directory, if it is found, it will be used to store settings, else settings will be stored in the registry. 
 
 #### Presets
-Presets to be done.
+To be done.
 
 #### Caveat
-ScreenCopy has no tangible user-interface, when running it is only reachable via the hotkey.
-However, starting an other instance will notice that it is already running and will activate that one instead.
+ScreenCopy, when in the background, has no other user interface then the hotkey.
+However when started, it will notice it is already running and will activate the running instance instead.
+
+## Building
+
+#### Prerequisites:
+
+WTL10, the [Windows Template Library](https://sourceforge.net/projects/wtl/).
+
+A Visual Studio 2017 project file is included.
