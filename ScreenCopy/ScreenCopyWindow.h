@@ -5,7 +5,7 @@
 #include "AboutDlg.h"
 #include "AutoSaveDlg.h"
 #include "HotkeyDlg.h"
-
+#include "PresetsDlg.h"
 
 /////////////////////////////////////////////////////////////////////////////
 /// Array of connected monitors
@@ -74,7 +74,7 @@ private:
         // Window
         CSettings settings;
         CRect rcWindow = { 0, 0, 400, 200 };
-        settings.RestoreWindowPlacement(m_hWnd, rcWindow);
+        settings.RestoreWindowPlacement(m_hWnd, L"main", rcWindow);
         // Set the window to 50% opacity, max = 255
         SetLayeredWindowAttributes(m_hWnd, 0, 128, LWA_ALPHA);
         SetWindowText(L"ScreenCopy");
@@ -120,7 +120,7 @@ private:
         m_hotkey.Save();
 
         CSettings settings;
-        settings.SaveWindowPlacement(m_hWnd);
+        settings.SaveWindowPlacement(m_hWnd, L"main");
 
         bHandled = FALSE;
         return 1;
@@ -190,9 +190,10 @@ private:
         PopupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
         PopupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
         PopupMenu.AppendMenu(MF_SEPARATOR);
-        PopupMenu.AppendMenu(MF_STRING, ID_VIEW_OPTIONS, L"Autosave...");
         PopupMenu.AppendMenu(MF_STRING, ID_VIEW_HOTKEY, L"Hotkey...");
-        PopupMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, L"About...");
+        PopupMenu.AppendMenu(MF_STRING, ID_VIEW_OPTIONS, L"Autosave...");
+        PopupMenu.AppendMenu(MF_STRING, ID_VIEW_PRESETS, L"Presets...");
+        PopupMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, L"About");
         PopupMenu.AppendMenu(MF_SEPARATOR);
         PopupMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit");
         PopupMenu.SetMenuDefaultItem(ID_VIEW_CLOSE, FALSE);
@@ -227,15 +228,21 @@ private:
             SaveScreen();
             break;
         }
+        case ID_VIEW_HOTKEY:
+        {
+            SelectAndRegisterHotkey();
+            break;
+        }
         case ID_VIEW_OPTIONS:
         {
             CAutoSaveDlg dlg;
             dlg.DoModal();
             break;
         }
-        case ID_VIEW_HOTKEY:
+        case ID_VIEW_PRESETS:
         {
-            SelectAndRegisterHotkey();
+            CPresetsDlg dlg;
+            dlg.DoModal();
             break;
         }
         default:

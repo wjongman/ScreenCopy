@@ -1,6 +1,4 @@
 #pragma once
-
-#include <vector>
 #include <string>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -18,6 +16,7 @@ public:
     virtual int ReadInt(std::wstring const& entry, int defval = 0) = 0;
     virtual void WriteString(std::wstring const& entry, std::wstring const& value) = 0;
     virtual void WriteInt(std::wstring const& entry, int value) = 0;
+    virtual void DeleteSection(std::wstring const& sectionName) = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,14 +32,12 @@ public:
     CIniFile(std::wstring const& iniFilePath) : m_filePath(iniFilePath)
     {
     }
-
+    
     //-------------------------------------------------------------------------
     ~CIniFile()
     {
-        // Flush
-        //WritePrivateProfileString(NULL, NULL, NULL, m_filePath.c_str());
     }
-
+    
     //-------------------------------------------------------------------------
     void SetSection(std::wstring const& sectionName) override
     {
@@ -71,6 +68,12 @@ public:
     void WriteInt(std::wstring const& entry, int value) override
     {
         WriteString(entry, std::to_wstring(value));
+    }
+
+    //-------------------------------------------------------------------------
+    void DeleteSection(std::wstring const& sectionName) override
+    {
+        WritePrivateProfileSection(sectionName.c_str(), NULL, m_filePath.c_str());
     }
 
 };
@@ -157,11 +160,26 @@ public:
         }
     }
 
+    //-------------------------------------------------------------------------
+    void DeleteSection(std::wstring const& sectionName) override
+    {
+        std::wstring section;
+        if (sectionName.empty())
+        {
+            section = m_rootKeyPath;
+        }
+        else
+        {
+            section = m_rootKeyPath + L"\\" + sectionName;
+        }
+        ::SHDeleteKey(HKEY_CURRENT_USER, section.c_str()); 
+    }
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Simple frontend for storing settings.
-// The constructor of this class determines whether to use
+// The constructor of this class determines whether to use 
 // an ini-file or the registry.
 //
 class CSettings
@@ -225,44 +243,45 @@ public:
     }
 
     //-------------------------------------------------------------------------
-    void RestoreWindowPlacement(HWND hWnd, CRect const& rcDefault)
+    void DeleteSection(std::wstring const& sectionName)
     {
-        m_pStore->SetSection(L"main");
-        CRect rcMain;
-        rcMain.left = m_pStore->ReadInt(L"left", rcDefault.left);
-        rcMain.top = m_pStore->ReadInt(L"top", rcDefault.top);
-        rcMain.right = m_pStore->ReadInt(L"right", rcDefault.right);
-        rcMain.bottom = m_pStore->ReadInt(L"bottom", rcDefault.bottom);
+        m_pStore->DeleteSection(sectionName);
+    }
+
+    //-------------------------------------------------------------------------
+    void RestoreWindowPlacement(HWND hWnd, std::wstring const& section, CRect const& default)
+    {
+        m_pStore->SetSection(section);
+        
+        CRect rcWindow;
+        rcWindow.left = m_pStore->ReadInt(L"left", default.left);
+        rcWindow.top = m_pStore->ReadInt(L"top", default.top);
+        rcWindow.right = m_pStore->ReadInt(L"right", default.right);
+        rcWindow.bottom = m_pStore->ReadInt(L"bottom", default.bottom);
 
         WINDOWPLACEMENT wp;
         wp.length = sizeof(WINDOWPLACEMENT);
         wp.flags = 0;
         wp.showCmd = SW_RESTORE;
-        wp.rcNormalPosition = rcMain;
+        wp.rcNormalPosition = rcWindow;
 
         SetWindowPlacement(hWnd, &wp);
     }
 
     //-------------------------------------------------------------------------
-    void SaveWindowPlacement(HWND hWnd)
+    void SaveWindowPlacement(HWND hWnd, std::wstring const& section)
     {
         WINDOWPLACEMENT wp;
         wp.length = sizeof(WINDOWPLACEMENT);
         GetWindowPlacement(hWnd, &wp);
-        CRect rcMain = wp.rcNormalPosition;
+        CRect rcWindow = wp.rcNormalPosition;
 
-        SaveWindowPlacement(rcMain);
-    }
+        m_pStore->SetSection(section);
 
-    //-------------------------------------------------------------------------
-    void SaveWindowPlacement(CRect const& rcMain)
-    {
-        m_pStore->SetSection(L"main");
-
-        m_pStore->WriteInt(L"left", rcMain.left);
-        m_pStore->WriteInt(L"top", rcMain.top);
-        m_pStore->WriteInt(L"right", rcMain.right);
-        m_pStore->WriteInt(L"bottom", rcMain.bottom);
+        m_pStore->WriteInt(L"left", rcWindow.left);
+        m_pStore->WriteInt(L"top", rcWindow.top);
+        m_pStore->WriteInt(L"right", rcWindow.right);
+        m_pStore->WriteInt(L"bottom", rcWindow.bottom);
     }
 
 private:

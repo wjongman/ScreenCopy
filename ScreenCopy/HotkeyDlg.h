@@ -65,7 +65,7 @@ class CHotkeyDlg : public CDialogImpl<CHotkeyDlg>
 public:
     enum { IDD = IDD_HOTKEYDLG };
 
-    BEGIN_MSG_MAP(CAutoSaveDlg)
+    BEGIN_MSG_MAP(CHotkeyDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_HANDLER(IDC_HOTKEY, EN_CHANGE, OnEditChange)
         COMMAND_ID_HANDLER(IDOK, OnOk)

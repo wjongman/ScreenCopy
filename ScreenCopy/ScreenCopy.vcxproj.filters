@@ -56,6 +56,12 @@
     <ClInclude Include="HotkeyDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PresetsDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PresetsListCtl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ScreenCopy.rc">

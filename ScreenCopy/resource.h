@@ -7,6 +7,7 @@
 #define IDD_AUTOSAVEDLG                 200
 #define IDD_HOTKEYDLG                   202
 #define IDD_STARTUPDLG                  206
+#define IDD_PRESETSDLG                  207
 #define IDC_EDIT_DIRECTORY              1066
 #define IDC_BROWSE                      1067
 #define IDC_EDIT_PREFIX                 1068
@@ -26,19 +27,24 @@
 #define IDC_CONFIGUREAUTOSAVE           1084
 #define IDC_CONFIGUREHOTKEY             1085
 #define IDC_PRESETSCONFIGURE            1086
+#define IDC_PRESET_ADD                  1088
+#define IDC_PRESET_EDIT                 1089
+#define IDC_PRESET_DELETE               1090
+#define IDC_LISTVIEW                    1091
 #define ID_SCREEN_COPY                  32775
 #define ID_SCREEN_SAVE                  32776
 #define ID_VIEW_OPTIONS                 32777
 #define ID_VIEW_CLOSE                   32778
 #define ID_VIEW_HOTKEY                  32779
+#define ID_VIEW_PRESETS                 32780
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        207
+#define _APS_NEXT_RESOURCE_VALUE        209
 #define _APS_NEXT_COMMAND_VALUE         32780
-#define _APS_NEXT_CONTROL_VALUE         1088
-#define _APS_NEXT_SYMED_VALUE           102
+#define _APS_NEXT_CONTROL_VALUE         1092
+#define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

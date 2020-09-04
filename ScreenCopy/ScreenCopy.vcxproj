@@ -213,6 +213,8 @@
     <ClInclude Include="AutoSave.h" />
     <ClInclude Include="AutoSaveDlg.h" />
     <ClInclude Include="HotkeyDlg.h" />
+    <ClInclude Include="PresetsDlg.h" />
+    <ClInclude Include="PresetsListCtl.h" />
     <ClInclude Include="ScreenCopyWindow.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Settings.h" />
