@@ -24,6 +24,15 @@ struct GrabberPreset
         , h(h)
     {
     }
+    //-----------------------------------------------------------------------
+    GrabberPreset(std::wstring const& name, CRect const& rect)
+        : description(name)
+        , x(rect.left)
+        , y(rect.top)
+        , w(rect.Width())
+        , h(rect.Height())
+    {
+    }
 
     //-----------------------------------------------------------------------
     GrabberPreset(std::wstring const& commatext) { SetCommaText(commatext); }
