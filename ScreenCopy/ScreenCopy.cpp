@@ -16,10 +16,12 @@ CAppModule _Module;
 
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
-    // If an instance is already running, switch to it and bail out
+    // If an instance is already running, 
+    // center it, activate it and bail out.
     HWND hwndOther = ::FindWindow(L"ScreenCopyWindowClass", 0);
     if (hwndOther)
     {
+        CWindow(hwndOther).CenterWindow();
         ::ShowWindow(hwndOther, SW_SHOW);
         ::SetForegroundWindow(hwndOther);
         ::BringWindowToTop(hwndOther);
