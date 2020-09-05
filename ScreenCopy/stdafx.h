@@ -18,6 +18,11 @@ extern CAppModule _Module;
 
 #include <atlwin.h>
 #include <atlmisc.h>
+#include <atlctrls.h>
+#include <strsafe.h>
+
+#include <string>
+#include <vector>
 
 #ifdef _UNICODE
 #if defined _M_IX86
