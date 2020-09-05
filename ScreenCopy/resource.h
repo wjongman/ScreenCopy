@@ -43,6 +43,7 @@
 #define ID_VIEW_CLOSE                   32778
 #define ID_VIEW_HOTKEY                  32779
 #define ID_VIEW_PRESETS                 32780
+#define ID_PRESET_FIRST                 50000
 
 // Next default values for new objects
 // 

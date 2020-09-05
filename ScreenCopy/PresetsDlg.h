@@ -7,7 +7,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Dialog for editing a grabber-preset
+// Dialog for adding and editing a grabber-preset
 //
 class CEditPresetDlg : public CDialogImpl<CEditPresetDlg>
 {
@@ -23,6 +23,15 @@ public:
         COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
     END_MSG_MAP()
 
+    //---------------------------------------------------------------------------
+    CEditPresetDlg() = default;
+
+    //---------------------------------------------------------------------------
+    CEditPresetDlg(GrabberPreset const& preset)
+    {
+        m_preset = preset;
+    }
+    
     //---------------------------------------------------------------------------
     void SetCaption(std::wstring const& title)
     {
@@ -107,10 +116,23 @@ public:
         NOTIFY_HANDLER(IDC_LISTVIEW, NM_CLICK, OnListSelChange)
     END_MSG_MAP()
 
+    //---------------------------------------------------------------------------
+    CManagePresetsDlg(PresetsList const& presetsList)
+    {
+        m_presetsList = presetsList;
+    }
+
+    //---------------------------------------------------------------------------
+    PresetsList GetPresets()
+    {
+        return m_presetsList;
+    }
+
+    //---------------------------------------------------------------------------
     void AddPreset(GrabberPreset preset)
     {
         CEditPresetDlg dlg;
-        dlg.SetCaption(L"New Preset");
+        dlg.SetCaption(L"Add Preset");
         if (dlg.DoModal() == IDOK)
         {
             m_presetsList.push_back(dlg.GetPreset());
@@ -131,13 +153,12 @@ private:
 
         m_editButton.EnableWindow(false);
         m_deleteButton.EnableWindow(false);
-        m_presetsList = LoadPresets();
         m_listView.Populate(m_presetsList);
         return TRUE;
     }
 
     //---------------------------------------------------------------------------
-    LRESULT OnAdd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    LRESULT OnAdd(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         CEditPresetDlg dlg;
         dlg.SetCaption(L"Add Preset");
@@ -148,8 +169,9 @@ private:
         }
         return 0;
     }
+
     //---------------------------------------------------------------------------
-    LRESULT OnEdit(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    LRESULT OnEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         int index = m_listView.GetSelectedIndex();
         GrabberPreset preset = m_presetsList[index];
@@ -163,8 +185,9 @@ private:
         }
         return 0;
     }
+
     //---------------------------------------------------------------------------
-    LRESULT OnDelete(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    LRESULT OnDelete(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         int index = m_listView.GetSelectedIndex();
         auto tail = m_presetsList.erase(m_presetsList.begin() + index);
@@ -172,10 +195,10 @@ private:
 
         return 0;
     }
+
     //---------------------------------------------------------------------------
     LRESULT OnOk(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        SavePresets();
         EndDialog(wID);
         return 0;
     }
@@ -187,7 +210,7 @@ private:
     }
 
     //-------------------------------------------------------------------------
-    LRESULT OnListSelChange(int idCtrl, LPNMHDR pnmh, BOOL& bHandled)
+    LRESULT OnListSelChange(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
     {
         m_editButton.EnableWindow(true);
         m_deleteButton.EnableWindow(true);
@@ -196,37 +219,6 @@ private:
         int oldIndex = m_listView.GetSelectedIndex();
         //UpdateLabels(index);
         return 0;
-    }
-
-    //---------------------------------------------------------------------------
-    PresetsList LoadPresets()
-    {
-        PresetsList presetsList;
-
-        CSettings settings;
-        std::wstring keyName = L"capture\\presets";
-        m_listView.DeleteAllItems();
-        for (int i = 1; i < 99; ++i)// 99 presets should be enough for everyone :-)
-        {
-            std::wstring commatext = settings.GetString(keyName, std::to_wstring(i), L"");
-            if (commatext.empty())
-                return presetsList;
-
-            presetsList.emplace_back(GrabberPreset(commatext));
-        }
-        return presetsList;
-    }
-
-    //---------------------------------------------------------------------------
-    void SavePresets()
-    {
-        CSettings settings;
-        std::wstring keyName = L"capture\\presets";
-        settings.DeleteSection(keyName);
-        for (size_t i = 0; i < m_presetsList.size(); ++i)
-        {
-            settings.SetString(keyName, std::to_wstring(i + 1), m_presetsList[i].GetCommaText());
-        }
     }
 
 };

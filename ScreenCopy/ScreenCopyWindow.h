@@ -7,6 +7,9 @@
 #include "HotkeyDlg.h"
 #include "PresetsDlg.h"
 
+//#define TEST_PRESETDLG
+
+
 /////////////////////////////////////////////////////////////////////////////
 /// Array of connected monitors
 struct MonitorRects
@@ -31,7 +34,8 @@ class CScreenWindow : public CWindowImpl<CScreenWindow, CWindow,
 {
     bool m_bHasFocus;
     Hotkey m_hotkey;
-   
+    PresetsList m_presetsList;
+
 public:
     DECLARE_WND_CLASS_EX(L"ScreenCopyWindowClass", 0, COLOR_WINDOW)
 
@@ -54,6 +58,11 @@ private:
     //-------------------------------------------------------------------------
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
+#ifdef TEST_PRESETDLG
+        CManagePresetsDlg dlg;
+        dlg.DoModal();
+        return -1;
+#endif        
         // Cursor
         HCURSOR hCursor = LoadCursor(NULL, IDC_SIZEALL);
         ::SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)hCursor);
@@ -78,7 +87,10 @@ private:
         // Set the window to 50% opacity, max = 255
         SetLayeredWindowAttributes(m_hWnd, 0, 128, LWA_ALPHA);
         SetWindowText(L"ScreenCopy");
-        
+
+        // Presets
+        m_presetsList = LoadPresets();
+
         // Hotkey
         m_hotkey.Load();
         if (m_hotkey.CanRegister())
@@ -107,20 +119,19 @@ private:
             m_hotkey.Register(m_hWnd, 1);
             return true;
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     //-------------------------------------------------------------------------
     LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
     {
+        CSettings settings;
+        settings.SaveWindowPlacement(m_hWnd, L"main");
+
         m_hotkey.UnRegister(m_hWnd, 1);
         m_hotkey.Save();
 
-        CSettings settings;
-        settings.SaveWindowPlacement(m_hWnd, L"main");
+        SavePresets();
 
         bHandled = FALSE;
         return 1;
@@ -182,25 +193,46 @@ private:
         ptMouse.x = GET_X_LPARAM(lParam);
         ptMouse.y = GET_Y_LPARAM(lParam);
 
-        CMenu PopupMenu;
-        PopupMenu.CreatePopupMenu();
+        CMenu popupMenu;
+        popupMenu.CreatePopupMenu();
 
-        PopupMenu.AppendMenu(MF_STRING, ID_VIEW_CLOSE, L"Close\t&Esc");
-        PopupMenu.AppendMenu(MF_SEPARATOR);
-        PopupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
-        PopupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
-        PopupMenu.AppendMenu(MF_SEPARATOR);
-        PopupMenu.AppendMenu(MF_STRING, ID_VIEW_HOTKEY, L"Hotkey...");
-        PopupMenu.AppendMenu(MF_STRING, ID_VIEW_OPTIONS, L"Autosave...");
-        PopupMenu.AppendMenu(MF_STRING, ID_VIEW_PRESETS, L"Presets...");
-        PopupMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, L"About");
-        PopupMenu.AppendMenu(MF_SEPARATOR);
-        PopupMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit");
-        PopupMenu.SetMenuDefaultItem(ID_VIEW_CLOSE, FALSE);
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_CLOSE, L"Close\t&Esc");
+        popupMenu.AppendMenu(MF_SEPARATOR);
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
+        popupMenu.AppendMenu(MF_SEPARATOR);
+        
+        CMenu subMenu;
+        subMenu.CreatePopupMenu();
+        subMenu.AppendMenu(MF_STRING, IDC_PRESET_ADD, L"Add...\t&A");
+        subMenu.AppendMenu(MF_STRING, ID_VIEW_PRESETS, L"Manage...");
+        subMenu.AppendMenu(MF_SEPARATOR);
+        int i = 1;
+        for (auto& preset : m_presetsList)
+        {
+            std::wstring title = preset.description + L"\t&Alt+" + std::to_wstring(i);
+            subMenu.AppendMenu(MF_STRING, ID_PRESET_FIRST + i, title.c_str());
+            if (i++ > 9)
+                break;
+        }
+
+        popupMenu.AppendMenu(MF_POPUP, subMenu, L"Presets");
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_HOTKEY, L"Hotkey...");
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_OPTIONS, L"Autosave...");
+        popupMenu.AppendMenu(MF_SEPARATOR);
+        popupMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, L"About");
+        popupMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit");
+        popupMenu.SetMenuDefaultItem(ID_VIEW_CLOSE, FALSE);
 
         // Pop-up where the right mouse button was pressed
-        UINT cmd = PopupMenu.TrackPopupMenu(
+        UINT cmd = popupMenu.TrackPopupMenu(
             TPM_LEFTALIGN | TPM_RETURNCMD, ptMouse.x, ptMouse.y, m_hWnd);
+
+        if (cmd > ID_PRESET_FIRST && cmd < ID_PRESET_FIRST + 9)
+        {
+            SetPreset(cmd - ID_PRESET_FIRST);
+            return 0;
+        }
 
         switch (cmd)
         {
@@ -239,10 +271,25 @@ private:
             dlg.DoModal();
             break;
         }
+        case IDC_PRESET_ADD:
+        {
+            CRect rc;
+            GetWindowRect(&rc);
+            CEditPresetDlg dlg({ L"", rc.left, rc.top, rc.Width(), rc.Height() });
+            dlg.SetCaption(L"Add Preset");
+            if (dlg.DoModal() == IDOK)
+            {
+                m_presetsList.push_back(dlg.GetPreset());
+            }
+            break;
+        }
         case ID_VIEW_PRESETS:
         {
-            CPresetsDlg dlg;
-            dlg.DoModal();
+            CManagePresetsDlg dlg(m_presetsList);
+            if (dlg.DoModal() == IDOK)
+            {
+                m_presetsList = dlg.GetPresets();
+            }
             break;
         }
         default:
@@ -602,6 +649,43 @@ private:
         mi.cbSize = sizeof MONITORINFO;
         GetMonitorInfo(hMon, &mi);
         return mi.rcMonitor;
+    }
+
+    //---------------------------------------------------------------------------
+    void SetPreset(int index)
+    {
+        GrabberPreset preset = m_presetsList[index - 1];
+        SetWindowPos(HWND_TOP, preset.x, preset.y, preset.w, preset.h, SWP_SHOWWINDOW);
+    }
+
+    //---------------------------------------------------------------------------
+    PresetsList LoadPresets()
+    {
+        PresetsList presetsList;
+
+        CSettings settings;
+        std::wstring keyName = L"capture\\presets";
+        for (int i = 1; i < 99; ++i) // 99 presets should be enough for everyone :-)
+        {
+            std::wstring commatext = settings.GetString(keyName, std::to_wstring(i), L"");
+            if (commatext.empty())
+                return presetsList;
+
+            presetsList.emplace_back(GrabberPreset(commatext));
+        }
+        return presetsList;
+    }
+
+    //---------------------------------------------------------------------------
+    void SavePresets()
+    {
+        CSettings settings;
+        std::wstring section = L"capture\\presets";
+        settings.DeleteSection(section);
+        for (size_t i = 0; i < m_presetsList.size(); ++i)
+        {
+            settings.SetString(section, std::to_wstring(i + 1), m_presetsList[i].GetCommaText());
+        }
     }
 
 };
