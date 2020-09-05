@@ -14,6 +14,8 @@ struct GrabberPreset
     int h = 0;
 
     //-----------------------------------------------------------------------
+    GrabberPreset() = default;
+    //-----------------------------------------------------------------------
     GrabberPreset(std::wstring const& name, int x, int y, int w, int h)
         : description(name)
         , x(x)
@@ -48,10 +50,10 @@ struct GrabberPreset
     //-----------------------------------------------------------------------
     std::wstring GetCommaText()
     {
-        // std::wstring descr = L"\"" + description + L"\"";
-        wchar_t commaStr[100] = {};
-        ::StringCchPrintfW(commaStr, 100, L"%s,%d,%d,%d,%d", description.c_str(), x, y, w, h);
-        return commaStr;
+        int maxSize = description.size() + 4 * 9;
+        std::vector<wchar_t> commaStr(maxSize);
+        ::StringCchPrintfW(commaStr.data(), maxSize, L"%s,%d,%d,%d,%d", description.c_str(), x, y, w, h);
+        return commaStr.data();
     }
     //-------------------------------------------------------------------------
     std::vector<std::wstring> SplitAt(std::wstring const& input, const wchar_t delimiter)
@@ -70,53 +72,68 @@ struct GrabberPreset
     }
 };
 
+using PresetsList = std::vector<GrabberPreset>;
+
 /////////////////////////////////////////////////////////////////////////////
 class CPresetsListCtrl : public CListViewCtrl
 {
-    std::vector<GrabberPreset> m_presetList;
+//     BEGIN_MSG_MAP(CPresetsListCtrl)
+//     CHAIN_MSG_MAP(CPresetsListCtrl)
+//     END_MSG_MAP()
+
+    const int m_cellWidth = 45;
 
 public:
-    BEGIN_MSG_MAP(CPresetsListCtrl)
-    CHAIN_MSG_MAP(CPresetsListCtrl)
-    END_MSG_MAP()
-
     //-----------------------------------------------------------------------
-    void Populate(std::vector<GrabberPreset> const& presetList)
+    void Populate(PresetsList const& presets)
     {
-        // Tweak the control styles so we don't have to remember to set them
-        // in the dialog template.
-        DWORD dwRemoveStyles = LVS_TYPEMASK | LVS_SORTASCENDING | LVS_SORTDESCENDING
+        // Set the control styles here so we don't have
+        // to remember to set them in the dialog template.
+        DWORD dwRemoveStyles = LVS_TYPEMASK /*| LVS_SORTASCENDING | LVS_SORTDESCENDING*/
             | LVS_OWNERDRAWFIXED;
-        DWORD dwNewStyles = LVS_REPORT | LVS_SINGLESEL;
+        DWORD dwNewStyles = LVS_REPORT | LVS_SINGLESEL | LVS_NOSORTHEADER;
         ModifyStyle(dwRemoveStyles, dwNewStyles);
-        ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+        ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_FLATSB);
+
         // Empty the control, and if there are no columns, insert columns.
         DeleteAllItems();
         LVCOLUMN rCol = { LVCF_WIDTH };
         if (!GetColumn(0, &rCol))
         {
             InsertColumn(0, L"Name", LVCFMT_LEFT, 135);
-            InsertColumn(1, L"X", LVCFMT_LEFT, 40);
-            InsertColumn(2, L"Y", LVCFMT_LEFT, 40);
-            InsertColumn(3, L"W", LVCFMT_LEFT, 40);
-            InsertColumn(4, L"H", LVCFMT_LEFT, 40);
+            InsertColumn(1, L"X", LVCFMT_RIGHT, m_cellWidth);
+            InsertColumn(2, L"Y", LVCFMT_RIGHT, m_cellWidth);
+            InsertColumn(3, L"W", LVCFMT_RIGHT, m_cellWidth);
+            InsertColumn(4, L"H", LVCFMT_RIGHT, m_cellWidth);
         }
 
-        // Initialize LVITEM members that are common to all items.
-        LVITEM lvi = {};
-//         lvi.iItem = MAXLONG;
-        lvi.stateMask = 0;
-        lvi.iSubItem = 0;
-        lvi.state = 0;
-        for (auto &preset : presetList)
+        // Add the items
+        int index = 0;
+        for (auto &preset : presets)
         {
-            int iItem = InsertItem(&lvi);
-            SetItemText(iItem, 0, preset.description.c_str());
-            SetItemText(iItem, 1, std::to_wstring(preset.x).c_str());
-            SetItemText(iItem, 2, std::to_wstring(preset.y).c_str());
-            SetItemText(iItem, 3, std::to_wstring(preset.w).c_str());
-            SetItemText(iItem, 4, std::to_wstring(preset.h).c_str());
+            SetRow(index, preset);
+            ++index;
         }
+        AdjustColumns();
     }
 
+    //-------------------------------------------------------------------------
+    void SetRow(int index, GrabberPreset preset)
+    {
+        AddItem(index, 0, preset.description.c_str());
+        AddItem(index, 1, std::to_wstring(preset.x).c_str());
+        AddItem(index, 2, std::to_wstring(preset.y).c_str());
+        AddItem(index, 3, std::to_wstring(preset.w).c_str());
+        AddItem(index, 4, std::to_wstring(preset.h).c_str());
+    }
+
+    //-------------------------------------------------------------------------
+    void AdjustColumns()
+    {
+        // To avoid showing horizontal scrollbar we adjust width of column 0
+        CRect rcClient;
+        GetClientRect(&rcClient);
+        int descrWidth = rcClient.Width() - 4 * m_cellWidth;
+        ListView_SetColumnWidth(m_hWnd, 0, descrWidth);
+    }
 };
