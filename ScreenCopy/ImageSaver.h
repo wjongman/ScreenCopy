@@ -10,8 +10,8 @@
 std::wstring GetDesktopPath()
 {
     wchar_t path[MAX_PATH];
-    HRESULT hr = SHGetFolderPath(NULL, CSIDL_DESKTOP, NULL, 0, path);
-    return std::wstring(path);
+    ::SHGetFolderPath(NULL, CSIDL_DESKTOP, NULL, 0, path);
+    return path;
 }
 
 // -------------------------------------------------------------------------
@@ -33,7 +33,7 @@ bool DirectoryExists(CString const& path)
 enum OverwriteAction {oaPrompt=1, oaReplace, oaRename };
 
 //---------------------------------------------------------------------------
-class AutoSaver
+class ImageSaver
 {
     CString m_directory;
     CString m_prefix;
@@ -43,13 +43,13 @@ class AutoSaver
     int m_existAction;
 
 public:
-    AutoSaver()
+    ImageSaver()
     {
         LoadOptions();
     }
 
     //---------------------------------------------------------------------------
-    ~AutoSaver()
+    ~ImageSaver()
     {
         SaveOptions();
     }

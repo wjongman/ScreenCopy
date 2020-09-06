@@ -673,7 +673,7 @@ private:
         CRect rcWindow;
         GetWindowRect(&rcWindow);
         HBITMAP hBmp = GrabScreen(rcWindow);
-        AutoSaver saver;
+        ImageSaver saver;
         saver.SaveImage(hBmp);
     }
 

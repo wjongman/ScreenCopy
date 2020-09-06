@@ -1,5 +1,5 @@
 # ScreenCopy
-A program that can take a snapshot of the screen and either save it to file or copy it to the clipboard.  
+A desktop program that can take a snapshot of the screen and either save it to file or copy it to the clipboard.  
 It sits in the background and can be activated with a global hotkey.  
 When active it shows a sizeable, transparent window that can be accurately positioned by using the mouse or the keyboard arrow-keys.  
 Autosave features make it easy to capture a sequence of views with a minimum of keystrokes.  
@@ -20,7 +20,7 @@ When saving a file with autosave enabled it will not prompt for a filename, inst
 ![Autosave](images/autosave.png)
 
 #### Portability
-When starting, it will look for the file ScreenCopy.ini in it's program directory, if it is found, it will be used to store settings, else settings will be stored in the registry. 
+When starting, it will look for the file ScreenCopy.ini in it's program directory. If it is found, it will be used to store settings, else settings will be stored in the registry. 
 
 #### Presets
 Press the 'A' key to save the current selection rectangle as a preset, you will be prompted for a description (mandatory).
