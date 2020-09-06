@@ -1,16 +1,15 @@
 #pragma once
-// #include <atlctrls.h>
-// #include "Settings.h"
-// #include <vector>
-// #include <strsafe.h>
+
 #include "PresetsListCtl.h"
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Dialog for adding and editing a grabber-preset
-//
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Dialog for adding and editing a grabber-preset
+///
 class CEditPresetDlg : public CDialogImpl<CEditPresetDlg>
 {
+    CEdit m_nameEdit;
+    CButton m_okButton;
     std::wstring m_title = L"Edit Preset";
     GrabberPreset m_preset;
 
@@ -21,6 +20,7 @@ public:
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_ID_HANDLER(IDOK, OnOk)
         COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
+        COMMAND_HANDLER(IDC_PRESET_NAME, EN_CHANGE, OnNameEditChange)
     END_MSG_MAP()
 
     //---------------------------------------------------------------------------
@@ -54,27 +54,46 @@ private:
     //---------------------------------------------------------------------------
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
+        m_nameEdit.Attach(GetDlgItem(IDC_PRESET_NAME));
+        m_okButton.Attach(GetDlgItem(IDOK));
+
         SetWindowText(m_title.c_str());
         CenterWindow(GetParent());
 
         ::SetWindowText(GetDlgItem(IDC_PRESET_NAME), m_preset.description.c_str());
-        ::SetWindowText(GetDlgItem(IDC_PRESET_X), std::to_wstring(m_preset.x).c_str());
-        ::SetWindowText(GetDlgItem(IDC_PRESET_Y), std::to_wstring(m_preset.y).c_str());
-        ::SetWindowText(GetDlgItem(IDC_PRESET_W), std::to_wstring(m_preset.w).c_str());
-        ::SetWindowText(GetDlgItem(IDC_PRESET_H), std::to_wstring(m_preset.h).c_str());
+        ::SetWindowText(GetDlgItem(IDC_PRESET_X), std::to_wstring(m_preset.rect.left).c_str());
+        ::SetWindowText(GetDlgItem(IDC_PRESET_Y), std::to_wstring(m_preset.rect.top).c_str());
+        ::SetWindowText(GetDlgItem(IDC_PRESET_W), std::to_wstring(m_preset.rect.Width()).c_str());
+        ::SetWindowText(GetDlgItem(IDC_PRESET_H), std::to_wstring(m_preset.rect.Height()).c_str());
+        
+        bool empty = (m_nameEdit.GetWindowTextLength() == 0);
+        m_okButton.EnableWindow(!empty);
+        
         return TRUE;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnNameEditChange(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        
+        bool empty = (m_nameEdit.GetWindowTextLength() == 0);
+        m_okButton.EnableWindow(!empty);
+        return 0;
     }
 
     //---------------------------------------------------------------------------
     LRESULT OnOk(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        wchar_t buffer[MAX_PATH];
-        GetDlgItemText(IDC_PRESET_NAME, buffer, sizeof(buffer));
-        m_preset.description = buffer;
-        m_preset.x = GetDlgItemInt(IDC_PRESET_X);
-        m_preset.y = GetDlgItemInt(IDC_PRESET_Y);
-        m_preset.w = GetDlgItemInt(IDC_PRESET_W);
-        m_preset.h = GetDlgItemInt(IDC_PRESET_H);
+        std::vector<wchar_t> buffer(m_nameEdit.GetWindowTextLength());
+        m_nameEdit.GetWindowText(buffer.data(), buffer.size());
+        m_preset.description = buffer.data();
+
+        int x = GetDlgItemInt(IDC_PRESET_X);
+        int y = GetDlgItemInt(IDC_PRESET_Y);
+        int w = GetDlgItemInt(IDC_PRESET_W);
+        int h = GetDlgItemInt(IDC_PRESET_H);
+        m_preset.rect = { x, y, x + w, y + h };
+
         EndDialog(wID);
         return 0;
     }
@@ -86,21 +105,17 @@ private:
     }
 };
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Dialog for managing grabber-presets
-//
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Dialog for managing grabber-presets
+///
 class CManagePresetsDlg : public CDialogImpl<CManagePresetsDlg>
 {
     CPresetsListCtrl m_listView;
-    CButton m_okButton;
-    CButton m_addButton;
-    CButton m_editButton;
-    CButton m_deleteButton;
 
     // We use m_presetsList as the underlying container, all
-    // operations in the listbox will be carried out on this
-    // container, from which the listbox is then repopulated.
+    // operations in the listview will be carried out on this
+    // container, from which the listview is then repopulated.
     PresetsList m_presetsList;
 
 public:
@@ -113,7 +128,7 @@ public:
         COMMAND_ID_HANDLER(IDC_PRESET_DELETE, OnDelete)
         COMMAND_ID_HANDLER(IDOK, OnOk)
         COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
-        NOTIFY_HANDLER(IDC_LISTVIEW, NM_CLICK, OnListSelChange)
+        NOTIFY_HANDLER(IDC_LISTVIEW, LVN_ITEMCHANGED, OnListSelChange)
     END_MSG_MAP()
 
     //---------------------------------------------------------------------------
@@ -145,15 +160,12 @@ private:
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
         CenterWindow(GetParent());
-        m_okButton.Attach(GetDlgItem(IDOK));
-        m_addButton.Attach(GetDlgItem(IDC_PRESET_ADD));
-        m_editButton.Attach(GetDlgItem(IDC_PRESET_EDIT));
-        m_deleteButton.Attach(GetDlgItem(IDC_PRESET_DELETE));
         m_listView.Attach(GetDlgItem(IDC_LISTVIEW));
 
-        m_editButton.EnableWindow(false);
-        m_deleteButton.EnableWindow(false);
+        ::EnableWindow(GetDlgItem(IDC_PRESET_EDIT), false);
+        ::EnableWindow(GetDlgItem(IDC_PRESET_DELETE), false);
         m_listView.Populate(m_presetsList);
+        m_listView.SelectItem(0);
         return TRUE;
     }
 
@@ -166,6 +178,7 @@ private:
         {
             m_presetsList.push_back(dlg.GetPreset());
             m_listView.Populate(m_presetsList);
+            m_listView.SelectItem(m_presetsList.size() - 1);
         }
         return 0;
     }
@@ -173,26 +186,42 @@ private:
     //---------------------------------------------------------------------------
     LRESULT OnEdit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        int index = m_listView.GetSelectedIndex();
-        GrabberPreset preset = m_presetsList[index];
-        CEditPresetDlg dlg;
-        dlg.SetPreset(preset);
-        dlg.SetCaption(L"Edit Preset");
-        if (dlg.DoModal() == IDOK)
+        int selIndex = m_listView.GetSelectedIndex();
+        if (selIndex != -1)
         {
-            m_presetsList[index] = dlg.GetPreset();
-            m_listView.Populate(m_presetsList);
+            GrabberPreset preset = m_presetsList[selIndex];
+            CEditPresetDlg dlg;
+            dlg.SetPreset(preset);
+            dlg.SetCaption(L"Edit Preset");
+            if (dlg.DoModal() == IDOK)
+            {
+                m_presetsList[selIndex] = dlg.GetPreset();
+                m_listView.Populate(m_presetsList);
+                m_listView.SelectItem(selIndex);
+            }
         }
+
         return 0;
     }
 
     //---------------------------------------------------------------------------
     LRESULT OnDelete(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        int index = m_listView.GetSelectedIndex();
-        auto tail = m_presetsList.erase(m_presetsList.begin() + index);
-        m_listView.Populate(m_presetsList);
-
+        size_t selIndex = m_listView.GetSelectedIndex();
+        if (selIndex != -1)
+        {
+            m_presetsList.erase(m_presetsList.begin() + selIndex);
+            m_listView.Populate(m_presetsList);
+            if (m_presetsList.size() > 0 && selIndex < m_presetsList.size())
+            {
+                m_listView.SelectItem(selIndex);
+            }
+            else
+            {
+                BOOL handled = false;
+                OnListSelChange(0, 0, handled);
+            }
+        }
         return 0;
     }
 
@@ -210,14 +239,11 @@ private:
     }
 
     //-------------------------------------------------------------------------
-    LRESULT OnListSelChange(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
+    LRESULT OnListSelChange(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
     {
-        m_editButton.EnableWindow(true);
-        m_deleteButton.EnableWindow(true);
-        auto lpnmia = reinterpret_cast<LPNMITEMACTIVATE>(pnmh);
-        int newIndex = lpnmia->iItem;
-        int oldIndex = m_listView.GetSelectedIndex();
-        //UpdateLabels(index);
+        bool enable = !m_presetsList.empty() && m_listView.GetSelectedIndex() != -1;
+        ::EnableWindow(GetDlgItem(IDC_PRESET_EDIT), enable);
+        ::EnableWindow(GetDlgItem(IDC_PRESET_DELETE), enable);
         return 0;
     }
 

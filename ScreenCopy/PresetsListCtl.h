@@ -8,29 +8,15 @@
 struct GrabberPreset
 {
     std::wstring description;
-    int x = 0;
-    int y = 0;
-    int w = 0;
-    int h = 0;
+    CRect rect = {};
 
     //-----------------------------------------------------------------------
     GrabberPreset() = default;
-    //-----------------------------------------------------------------------
-    GrabberPreset(std::wstring const& name, int x, int y, int w, int h)
-        : description(name)
-        , x(x)
-        , y(y)
-        , w(w)
-        , h(h)
-    {
-    }
+
     //-----------------------------------------------------------------------
     GrabberPreset(std::wstring const& name, CRect const& rect)
         : description(name)
-        , x(rect.left)
-        , y(rect.top)
-        , w(rect.Width())
-        , h(rect.Height())
+        , rect(rect)
     {
     }
 
@@ -47,10 +33,12 @@ struct GrabberPreset
         {
             description = presets[0];
             // TODO: add decent error checking
-            x = std::stoi(presets[1]);
-            y = std::stoi(presets[2]);
-            w = std::stoi(presets[3]);
-            h = std::stoi(presets[4]);
+            int x = std::stoi(presets[1]);
+            int y = std::stoi(presets[2]);
+            int w = std::stoi(presets[3]);
+            int h = std::stoi(presets[4]);
+            rect = { x, y, x + w, y + h };
+
             return true;
         }
         return false;
@@ -61,7 +49,8 @@ struct GrabberPreset
     {
         int maxSize = description.size() + 4 * 9;
         std::vector<wchar_t> commaStr(maxSize);
-        ::StringCchPrintfW(commaStr.data(), maxSize, L"%s,%d,%d,%d,%d", description.c_str(), x, y, w, h);
+        ::StringCchPrintfW(commaStr.data(), maxSize, L"%s,%d,%d,%d,%d", 
+            description.c_str(), rect.left, rect.top, rect.Width(), rect.Height());
         return commaStr.data();
     }
     //-------------------------------------------------------------------------
@@ -86,10 +75,6 @@ using PresetsList = std::vector<GrabberPreset>;
 /////////////////////////////////////////////////////////////////////////////
 class CPresetsListCtrl : public CListViewCtrl
 {
-//     BEGIN_MSG_MAP(CPresetsListCtrl)
-//     CHAIN_MSG_MAP(CPresetsListCtrl)
-//     END_MSG_MAP()
-
     const int m_cellWidth = 45;
 
 public:
@@ -98,11 +83,11 @@ public:
     {
         // Set the control styles here so we don't have
         // to remember to set them in the dialog template.
-        DWORD dwRemoveStyles = LVS_TYPEMASK /*| LVS_SORTASCENDING | LVS_SORTDESCENDING*/
+        DWORD dwRemoveStyles = LVS_TYPEMASK | LVS_SORTASCENDING | LVS_SORTDESCENDING
             | LVS_OWNERDRAWFIXED;
-        DWORD dwNewStyles = LVS_REPORT | LVS_SINGLESEL | LVS_NOSORTHEADER;
-        ModifyStyle(dwRemoveStyles, dwNewStyles);
-        ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_FLATSB);
+        DWORD dwAddStyles = LVS_REPORT | LVS_SINGLESEL | LVS_NOSORTHEADER;
+        ModifyStyle(dwRemoveStyles, dwAddStyles);
+        ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
         // Empty the control, and if there are no columns, insert columns.
         DeleteAllItems();
@@ -130,10 +115,10 @@ public:
     void SetRow(int index, GrabberPreset preset)
     {
         AddItem(index, 0, preset.description.c_str());
-        AddItem(index, 1, std::to_wstring(preset.x).c_str());
-        AddItem(index, 2, std::to_wstring(preset.y).c_str());
-        AddItem(index, 3, std::to_wstring(preset.w).c_str());
-        AddItem(index, 4, std::to_wstring(preset.h).c_str());
+        AddItem(index, 1, std::to_wstring(preset.rect.left).c_str());
+        AddItem(index, 2, std::to_wstring(preset.rect.top).c_str());
+        AddItem(index, 3, std::to_wstring(preset.rect.Width()).c_str());
+        AddItem(index, 4, std::to_wstring(preset.rect.Height()).c_str());
     }
 
     //-------------------------------------------------------------------------

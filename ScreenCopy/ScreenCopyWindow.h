@@ -12,23 +12,25 @@
 
 /////////////////////////////////////////////////////////////////////////////
 /// Array of connected monitors
+///
 struct MonitorRects
 {
-    std::vector<RECT> rcMonitors;
+    std::vector<RECT> rects;
+    MonitorRects() { EnumDisplayMonitors(0, 0, MonitorEnum, (LPARAM)this); }
     static BOOL CALLBACK MonitorEnum(
         HMONITOR hMon, HDC hdc, LPRECT lprcMonitor, LPARAM pData)
     {
         MonitorRects* pThis = reinterpret_cast<MonitorRects*>(pData);
-        pThis->rcMonitors.push_back(*lprcMonitor);
+        pThis->rects.push_back(*lprcMonitor);
         return TRUE;
     }
 
-    MonitorRects() { EnumDisplayMonitors(0, 0, MonitorEnum, (LPARAM)this); }
 };
 
 /////////////////////////////////////////////////////////////////////////////
 /// A half-transparent window with no caption that can
 /// capture the screen below it
+///
 class CScreenWindow : public CWindowImpl<CScreenWindow, CWindow,
           CWinTraits<WS_VISIBLE | WS_POPUP, WS_EX_LAYERED | WS_EX_TOPMOST>>
 {
@@ -90,6 +92,16 @@ private:
 
         // Presets
         m_presetsList = LoadPresets();
+        // If presetsList is empty, add monitor rect(s)
+        if (m_presetsList.empty())
+        {
+            MonitorRects mons;
+            for (size_t i = 0; i < mons.rects.size(); ++i)
+            {
+                auto name = L"Monitor " + std::to_wstring(i + 1);
+                m_presetsList.push_back({ name, mons.rects[i] });
+            }
+        }
 
         // Hotkey
         m_hotkey.Load();
@@ -99,6 +111,7 @@ private:
         }
         else
         {
+            CenterWindow();
             bool ok = SelectAndRegisterHotkey();
             if (!ok)
             {
@@ -107,19 +120,6 @@ private:
             }
         }
         return 0;
-    }
-
-    //-------------------------------------------------------------------------
-    bool SelectAndRegisterHotkey()
-    {
-        CHotkeyDlg dlg(m_hotkey);
-        if (dlg.DoModal() == IDOK)
-        {
-            m_hotkey = dlg.GetHotkey();
-            m_hotkey.Register(m_hWnd, 1);
-            return true;
-        }
-        return false;
     }
 
     //-------------------------------------------------------------------------
@@ -144,11 +144,11 @@ private:
 
         if (pwp->flags & SWP_SHOWWINDOW)
         {
-            // window_was_shown();
+            // window_was_shown
         }
         if (pwp->flags & SWP_HIDEWINDOW)
         {
-            // window_was_hidden();
+            // window_was_hidden
         }
         if (!(pwp->flags & SWP_NOMOVE))
         {
@@ -157,9 +157,9 @@ private:
             if (!controlkeydown)
             {
                 // Snap to edges of work area
-                int EdgeSnapGap = 15;
+                int edgeSnapGap = 15;
                 CSnapRect sr(pwp);
-                sr.SnapToInsideOf(GetMonitorRect(), EdgeSnapGap);
+                sr.SnapToInsideOf(GetMonitorRect(), edgeSnapGap);
                 pwp->x = sr.left;
                 pwp->y = sr.top;
             }
@@ -168,13 +168,17 @@ private:
         if (!(pwp->flags & SWP_NOSIZE))
         {
             // window_resized_to(pwp->cx, pwp->cy);
+            // Minimum size is 16x16 px.
+            pwp->cx = pwp->cx < 16 ? 16 : pwp->cx;
+            pwp->cy = pwp->cy < 16 ? 16 : pwp->cy;
+            
             bool controlkeydown = GetKeyState(VK_CONTROL) & 0x8000;
             if (!controlkeydown)
             {
                 // Snap to edges of work area
-                int EdgeSnapGap = 15;
+                int edgeSnapGap = 15;
                 CSnapRect sr(pwp);
-                sr.SnapToInsideOf(GetMonitorRect(), EdgeSnapGap);
+                sr.SnapToInsideOf(GetMonitorRect(), edgeSnapGap);
                 pwp->cx = sr.Width();
                 pwp->cy = sr.Height();
             }
@@ -200,23 +204,9 @@ private:
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...\tShift+&S");
         popupMenu.AppendMenu(MF_SEPARATOR);
-        
-        CMenu subMenu;
-        subMenu.CreatePopupMenu();
-        subMenu.AppendMenu(MF_STRING, IDC_PRESET_ADD, L"Add...\t&A");
-        subMenu.AppendMenu(MF_STRING, ID_VIEW_PRESETS, L"Manage...");
-        subMenu.AppendMenu(MF_SEPARATOR);
-        int i = 1;
-        for (auto& preset : m_presetsList)
-        {
-            std::wstring title = preset.description + L"\t&Alt+" + std::to_wstring(i);
-            subMenu.AppendMenu(MF_STRING, ID_PRESET_FIRST + i, title.c_str());
-            if (i++ > 9)
-                break;
-        }
-
-        popupMenu.AppendMenu(MF_POPUP, subMenu, L"Presets");
+        AppendPresetMenu(popupMenu);
         popupMenu.AppendMenu(MF_STRING, ID_VIEW_HOTKEY, L"Hotkey...");
         popupMenu.AppendMenu(MF_STRING, ID_VIEW_OPTIONS, L"Autosave...");
         popupMenu.AppendMenu(MF_SEPARATOR);
@@ -226,28 +216,44 @@ private:
 
         // Pop-up where the right mouse button was pressed
         UINT cmd = popupMenu.TrackPopupMenu(
-            TPM_LEFTALIGN | TPM_RETURNCMD, ptMouse.x, ptMouse.y, m_hWnd);
+            TPM_CENTERALIGN | TPM_RETURNCMD, ptMouse.x, ptMouse.y, m_hWnd);
 
+        return DispatchMenuCommand(cmd);
+    }
+
+    //-------------------------------------------------------------------------
+    void AppendPresetMenu(CMenu &popupMenu)
+    {
+        CMenu subMenu;
+        subMenu.CreatePopupMenu();
+        subMenu.AppendMenu(MF_STRING, IDC_PRESET_ADD, L"Add...\t&A");
+        subMenu.AppendMenu(MF_STRING, ID_VIEW_PRESETS, L"Manage...\t&M");
+        subMenu.AppendMenu(MF_SEPARATOR);
+        int i = 1;
+        for (auto& preset : m_presetsList)
+        {
+            std::wstring title = preset.description + L"\t&Alt+" + std::to_wstring(i);
+            subMenu.AppendMenu(MF_STRING, ID_PRESET_FIRST + i, title.c_str());
+            if (i++ > 9)
+                break;
+        }
+        popupMenu.AppendMenu(MF_POPUP, subMenu, L"Presets");
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT DispatchMenuCommand(UINT cmd)
+    {
         if (cmd > ID_PRESET_FIRST && cmd < ID_PRESET_FIRST + 9)
         {
-            SetPreset(cmd - ID_PRESET_FIRST);
+            RestorePreset(cmd - ID_PRESET_FIRST - 1);
             return 0;
         }
 
         switch (cmd)
         {
-        case ID_APP_EXIT:
-            PostMessage(WM_CLOSE);
-            break;
         case ID_VIEW_CLOSE:
             ShowWindow(SW_HIDE);
             break;
-        case ID_APP_ABOUT:
-        {
-            CAboutDlg dlg;
-            dlg.DoModal();
-            break;
-        }
         case ID_SCREEN_COPY:
         {
             ShowWindow(SW_HIDE);
@@ -258,6 +264,12 @@ private:
         {
             ShowWindow(SW_HIDE);
             SaveScreen();
+            break;
+        }
+        case ID_SCREEN_SAVEAS:
+        {
+            ShowWindow(SW_HIDE);
+            SaveScreenAs();
             break;
         }
         case ID_VIEW_HOTKEY:
@@ -273,25 +285,23 @@ private:
         }
         case IDC_PRESET_ADD:
         {
-            CRect rc;
-            GetWindowRect(&rc);
-            CEditPresetDlg dlg({ L"", rc.left, rc.top, rc.Width(), rc.Height() });
-            dlg.SetCaption(L"Add Preset");
-            if (dlg.DoModal() == IDOK)
-            {
-                m_presetsList.push_back(dlg.GetPreset());
-            }
+            AddPreset();
             break;
         }
         case ID_VIEW_PRESETS:
         {
-            CManagePresetsDlg dlg(m_presetsList);
-            if (dlg.DoModal() == IDOK)
-            {
-                m_presetsList = dlg.GetPresets();
-            }
+            ManagePresets();
             break;
         }
+        case ID_APP_ABOUT:
+        {
+            CAboutDlg dlg;
+            dlg.DoModal();
+            break;
+        }
+        case ID_APP_EXIT:
+            PostMessage(WM_CLOSE);
+            break;
         default:
             ::SendMessage(m_hWnd, WM_COMMAND, MAKEWPARAM(cmd, 0), NULL);
             break;
@@ -345,6 +355,14 @@ private:
             SaveScreen();
             break;
 
+        case 'A':
+            AddPreset();
+            break;
+
+        case 'M':
+            ManagePresets();
+            break;
+
         case VK_ESCAPE:
             ShowWindow(SW_HIDE);
         }
@@ -360,7 +378,7 @@ private:
         // Bit 29 of lParam is state of Alt key
         if (lParam & 0x20000000)
         {
-            // Alt-<num> selects monitor
+            // Alt-<num> selects preset
             switch (wParam)
             {
             case '1':
@@ -372,13 +390,8 @@ private:
             case '7':
             case '8':
             case '9':
-                // '1' means monitor[0]
-                UINT num = wParam - '0' - 1;
-                MonitorRects monitors;
-                if (num < monitors.rcMonitors.size())
-                {
-                    SetWindowPos(HWND_TOP, &monitors.rcMonitors[num], SWP_SHOWWINDOW);
-                }
+                // '1' means preset[0]
+                RestorePreset(wParam - '0' - 1);
             }
         }
         return 0;
@@ -503,7 +516,6 @@ private:
         CRect rc;
         GetClientRect(&rc);
         
-        CPen activePen = CreatePen(PS_SOLID, 1, COLOR_ACTIVECAPTION);
         CPen inactivePen = CreatePen(PS_DOT, 1, COLOR_INACTIVECAPTION);
         CPen hilitePen = CreatePen(PS_SOLID, 1, RGB(255, 0, 255));
         if (m_bHasFocus)
@@ -582,6 +594,42 @@ private:
         return 0;
     }
 
+    //-------------------------------------------------------------------------
+    bool SelectAndRegisterHotkey()
+    {
+        CHotkeyDlg dlg(m_hotkey);
+        if (dlg.DoModal() == IDOK)
+        {
+            m_hotkey = dlg.GetHotkey();
+            m_hotkey.Register(m_hWnd, 1);
+            return true;
+        }
+        return false;
+    }
+
+    //-------------------------------------------------------------------------
+    void AddPreset()
+    {
+        CRect rc;
+        GetWindowRect(&rc);
+        CEditPresetDlg dlg({ L"", rc });
+        dlg.SetCaption(L"Add Preset");
+        if (dlg.DoModal() == IDOK)
+        {
+            m_presetsList.push_back(dlg.GetPreset());
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    void ManagePresets()
+    {
+        CManagePresetsDlg dlg(m_presetsList);
+        if (dlg.DoModal() == IDOK)
+        {
+            m_presetsList = dlg.GetPresets();
+        }
+    }
+
     //---------------------------------------------------------------------------
     HBITMAP GrabScreen(CRect const& rc)
     {
@@ -630,6 +678,18 @@ private:
     }
 
     //-------------------------------------------------------------------------
+    void SaveScreenAs()
+    {
+        CRect rcWindow;
+        GetWindowRect(&rcWindow);
+        HBITMAP hBmp = GrabScreen(rcWindow);
+        //CFileDialog dlg();
+        //
+        // TODO
+        //
+    }
+
+    //-------------------------------------------------------------------------
     // Return bounding rectangle of virtual desktop
     CRect GetScreenDimensions()
     {
@@ -652,10 +712,9 @@ private:
     }
 
     //---------------------------------------------------------------------------
-    void SetPreset(int index)
+    void RestorePreset(int index)
     {
-        GrabberPreset preset = m_presetsList[index - 1];
-        SetWindowPos(HWND_TOP, preset.x, preset.y, preset.w, preset.h, SWP_SHOWWINDOW);
+        SetWindowPos(HWND_TOP, m_presetsList[index].rect, SWP_SHOWWINDOW);
     }
 
     //---------------------------------------------------------------------------
@@ -664,14 +723,14 @@ private:
         PresetsList presetsList;
 
         CSettings settings;
-        std::wstring keyName = L"capture\\presets";
+        std::wstring keyName = L"presets";
         for (int i = 1; i < 99; ++i) // 99 presets should be enough for everyone :-)
         {
             std::wstring commatext = settings.GetString(keyName, std::to_wstring(i), L"");
             if (commatext.empty())
                 return presetsList;
 
-            presetsList.emplace_back(GrabberPreset(commatext));
+            presetsList.push_back(GrabberPreset(commatext));
         }
         return presetsList;
     }
@@ -680,7 +739,7 @@ private:
     void SavePresets()
     {
         CSettings settings;
-        std::wstring section = L"capture\\presets";
+        std::wstring section = L"presets";
         settings.DeleteSection(section);
         for (size_t i = 0; i < m_presetsList.size(); ++i)
         {
