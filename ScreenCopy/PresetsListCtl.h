@@ -53,7 +53,7 @@ struct GrabberPreset
         return commaStr.data();
     }
     //-------------------------------------------------------------------------
-    std::vector<std::wstring> SplitAt(std::wstring const& input, const wchar_t delimiter)
+    std::vector<std::wstring> SplitAt(std::wstring const& input, wchar_t const delimiter)
     // Return vector of parts in 'input' separated by 'delimiter'
     {
         std::vector<std::wstring> parts;
@@ -72,6 +72,9 @@ struct GrabberPreset
 using PresetsList = std::vector<GrabberPreset>;
 
 /////////////////////////////////////////////////////////////////////////////
+//
+//  A CListViewCtrl specialized to display grabber-presets
+//
 class CPresetsListCtrl : public CListViewCtrl
 {
     const int m_cellWidth = 45;
