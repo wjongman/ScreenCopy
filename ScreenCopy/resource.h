@@ -37,6 +37,8 @@
 #define IDC_PRESET_Y                    1094
 #define IDC_PRESET_W                    1095
 #define IDC_PRESET_H                    1096
+#define IDC_PRESET_MOVEUP               1097
+#define IDC_PRESET_MOVEDOWN             1098
 #define ID_SCREEN_COPY                  32775
 #define ID_SCREEN_SAVE                  32776
 #define ID_VIEW_OPTIONS                 32777
@@ -52,7 +54,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        211
 #define _APS_NEXT_COMMAND_VALUE         32782
-#define _APS_NEXT_CONTROL_VALUE         1097
+#define _APS_NEXT_CONTROL_VALUE         1099
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

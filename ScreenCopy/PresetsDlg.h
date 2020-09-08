@@ -126,8 +126,12 @@ public:
         COMMAND_ID_HANDLER(IDC_PRESET_ADD, OnAdd)
         COMMAND_ID_HANDLER(IDC_PRESET_EDIT, OnEdit)
         COMMAND_ID_HANDLER(IDC_PRESET_DELETE, OnDelete)
+        COMMAND_ID_HANDLER(IDC_PRESET_MOVEUP, OnMoveUp)
+        COMMAND_ID_HANDLER(IDC_PRESET_MOVEDOWN, OnMoveDown)
         COMMAND_ID_HANDLER(IDOK, OnOk)
         COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
+        NOTIFY_HANDLER(IDC_LISTVIEW, LVN_ITEMCHANGED, OnListSelChange)
+        NOTIFY_HANDLER(IDC_LISTVIEW, LVN_BEGINDRAG, OnListSelChange)
         NOTIFY_HANDLER(IDC_LISTVIEW, LVN_ITEMCHANGED, OnListSelChange)
     END_MSG_MAP()
 
@@ -226,6 +230,45 @@ private:
     }
 
     //---------------------------------------------------------------------------
+    LRESULT OnMoveUp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        size_t selIndex = m_listView.GetSelectedIndex();
+        if (selIndex > 0)
+        {
+            MovePresetItem(selIndex, selIndex - 1);
+            m_listView.Populate(m_presetsList);
+            m_listView.SelectItem(selIndex - 1);
+        }
+        m_listView.SetFocus();
+        return 0;
+    }
+
+    //---------------------------------------------------------------------------
+    LRESULT OnMoveDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        size_t selIndex = m_listView.GetSelectedIndex();
+        if (selIndex < m_listView.GetItemCount() - 1)
+        {
+            MovePresetItem(selIndex, selIndex + 1);
+            m_listView.Populate(m_presetsList);
+            m_listView.SelectItem(selIndex + 1);
+        }
+        m_listView.SetFocus();
+        return 0;
+    }
+
+//---------------------------------------------------------------------------
+    void MovePresetItem(size_t from, size_t to)
+    {
+        if (to > m_presetsList.size())
+            to = m_presetsList.size();
+
+        GrabberPreset tmp = m_presetsList[from];
+        m_presetsList.erase(m_presetsList.begin() + from);
+        m_presetsList.insert(m_presetsList.begin() + to, tmp);
+    }
+
+    //---------------------------------------------------------------------------
     LRESULT OnOk(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         EndDialog(wID);
@@ -241,9 +284,13 @@ private:
     //-------------------------------------------------------------------------
     LRESULT OnListSelChange(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
     {
-        bool enable = !m_presetsList.empty() && m_listView.GetSelectedIndex() != -1;
+        size_t selIndex = m_listView.GetSelectedIndex();
+        bool enable = !m_presetsList.empty() && selIndex != -1;
         ::EnableWindow(GetDlgItem(IDC_PRESET_EDIT), enable);
         ::EnableWindow(GetDlgItem(IDC_PRESET_DELETE), enable);
+        
+        ::EnableWindow(GetDlgItem(IDC_PRESET_MOVEUP), selIndex > 0);
+        ::EnableWindow(GetDlgItem(IDC_PRESET_MOVEDOWN), selIndex < m_listView.GetItemCount() - 1);
         return 0;
     }
 
