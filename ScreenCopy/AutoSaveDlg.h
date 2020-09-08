@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AutoSave.h"
+#include "ImageSaver.h"
 #include "resource.h"
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -73,7 +73,6 @@ public:
     LRESULT OnBrowse(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         // Show Select Folder dialog
-        //CFolderBrowser fb(L"Choose directory");
         std::wstring selected = SelectFolder(m_hWnd);
         if (!selected.empty())
         {
@@ -240,6 +239,7 @@ public:
         EndDialog(wID);
         return 0;
     }
+    
     //---------------------------------------------------------------------------
     LRESULT OnCancel(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {

@@ -210,7 +210,7 @@
   <ItemGroup>
     <ClInclude Include="about.h" />
     <ClInclude Include="AboutDlg.h" />
-    <ClInclude Include="AutoSave.h" />
+    <ClInclude Include="ImageSaver.h" />
     <ClInclude Include="AutoSaveDlg.h" />
     <ClInclude Include="HotkeyDlg.h" />
     <ClInclude Include="PresetsDlg.h" />

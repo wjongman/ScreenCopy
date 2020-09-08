@@ -1,14 +1,11 @@
 #pragma once
 #include "Settings.h"
-#include "AutoSave.h"
+#include "ImageSaver.h"
 #include "SnapRect.h"
 #include "AboutDlg.h"
 #include "AutoSaveDlg.h"
 #include "HotkeyDlg.h"
 #include "PresetsDlg.h"
-
-//#define TEST_PRESETDLG
-
 
 /////////////////////////////////////////////////////////////////////////////
 /// Array of connected monitors
@@ -28,7 +25,7 @@ struct MonitorRects
 };
 
 /////////////////////////////////////////////////////////////////////////////
-/// A half-transparent window with no caption that can
+/// Main window, a half-transparent window with no caption that can
 /// capture the screen below it
 ///
 class CScreenWindow : public CWindowImpl<CScreenWindow, CWindow,
@@ -60,11 +57,6 @@ private:
     //-------------------------------------------------------------------------
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-#ifdef TEST_PRESETDLG
-        CManagePresetsDlg dlg;
-        dlg.DoModal();
-        return -1;
-#endif        
         // Cursor
         HCURSOR hCursor = LoadCursor(NULL, IDC_SIZEALL);
         ::SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)hCursor);
@@ -211,7 +203,7 @@ private:
         popupMenu.AppendMenu(MF_STRING, ID_VIEW_OPTIONS, L"Autosave...");
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, L"About");
-        popupMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit");
+        popupMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit\t&X");
         popupMenu.SetMenuDefaultItem(ID_VIEW_CLOSE, FALSE);
 
         // Pop-up where the right mouse button was pressed
@@ -352,7 +344,14 @@ private:
 
         case 'S':
             ShowWindow(SW_HIDE);
-            SaveScreen();
+            if (::GetKeyState(VK_SHIFT) & 0x8000)
+            {
+                SaveScreenAs();
+            } 
+            else
+            {
+                SaveScreen();
+            }
             break;
 
         case 'A':
@@ -361,6 +360,10 @@ private:
 
         case 'M':
             ManagePresets();
+            break;
+
+        case 'X':
+            PostMessage(WM_CLOSE);
             break;
 
         case VK_ESCAPE:
@@ -674,7 +677,7 @@ private:
         GetWindowRect(&rcWindow);
         HBITMAP hBmp = GrabScreen(rcWindow);
         ImageSaver saver;
-        saver.SaveImage(hBmp);
+        saver.AutoSaveImage(hBmp);
     }
 
     //-------------------------------------------------------------------------
@@ -683,10 +686,8 @@ private:
         CRect rcWindow;
         GetWindowRect(&rcWindow);
         HBITMAP hBmp = GrabScreen(rcWindow);
-        //CFileDialog dlg();
-        //
-        // TODO
-        //
+        ImageSaver saver;
+        saver.SaveImageAs(hBmp);
     }
 
     //-------------------------------------------------------------------------

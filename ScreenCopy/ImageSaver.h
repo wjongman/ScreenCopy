@@ -55,9 +55,16 @@ public:
     }
 
     //---------------------------------------------------------------------------
-    void SaveImage(HBITMAP hBmp)
+    void AutoSaveImage(HBITMAP hBmp)
     {
-        SaveBitmap(hBmp);
+        AutoSaveBitmap(hBmp);
+        DeleteObject(hBmp);
+    }
+
+    //---------------------------------------------------------------------------
+    void SaveImageAs(HBITMAP hBmp)
+    {
+        SaveBitmapAs(hBmp);
         DeleteObject(hBmp);
     }
 
@@ -129,7 +136,52 @@ private:
     }
 
     //---------------------------------------------------------------------------
-    void SaveBitmap(HBITMAP hBitmap)
+    void SaveBitmapAs(HBITMAP hBitmap)
+    {
+        static unsigned int lastFileTypeIndex = 2;
+
+        COMDLG_FILTERSPEC fileTypes[] = { { L"jpg", L"*.jpg; *.jpeg" }, { L"png", L"*.png" },
+            { L"bmp", L"*.bmp" }, { L"gif", L"*.gif" } };
+
+        CShellFileSaveDialog selectFileDlg((LPCWSTR)NULL, 
+            FOS_OVERWRITEPROMPT | FOS_FORCEFILESYSTEM, NULL, fileTypes, 4);
+        
+        selectFileDlg.GetPtr()->SetFileTypeIndex(lastFileTypeIndex);
+        if (selectFileDlg.DoModal() == IDOK)
+        {
+            selectFileDlg.GetPtr()->GetFileTypeIndex(&lastFileTypeIndex);
+
+            CComPtr<IShellItem> pShellItem;
+            selectFileDlg.GetPtr()->GetResult(&pShellItem);
+            
+            CComHeapPtr<wchar_t> pPath;
+            pShellItem->GetDisplayName(SIGDN_FILESYSPATH, &pPath);
+
+            std::wstring filePath(pPath);
+            std::wstring extension(PathFindExtension(pPath));
+
+            if (extension.empty())
+            {
+                std::wstring ext = fileTypes[lastFileTypeIndex - 1].pszName;
+                extension = L"." + ext;
+                filePath += extension;
+            }
+
+            std::wstring mimeType;
+            if (extension == L".jpg")
+            {
+                mimeType = L"image/jpeg";
+            }
+            else
+            {
+                mimeType = L"image/" + extension.erase(0, 1);
+            }
+            DoSave(hBitmap, filePath.c_str(), mimeType.c_str());
+        }
+    }
+
+    //---------------------------------------------------------------------------
+    void AutoSaveBitmap(HBITMAP hBitmap)
     {
         // First check if the target directory exists
         if (!DirectoryExists(m_directory))
@@ -151,7 +203,7 @@ private:
                 CString message = GetNextPathName() + L":\n\nOverwrite existing file?";
                 if (::MessageBox(NULL, message, L"Auto save", MB_OKCANCEL) == IDCANCEL)
                 {
-                    // Canceled, do nothing
+                    // Canceled, do nothing -> overwrite
                     return;
                 }
             }
