@@ -26,7 +26,6 @@ struct GrabberPreset
     //-----------------------------------------------------------------------
     bool SetCommaText(std::wstring const& commaText)
     {
-        bool success = false;
         auto presets = SplitAt(commaText, L',');
         // FIXME: this assumes that "description"  doesn't contain commas..
         if (presets.size() == 5)
