@@ -6,7 +6,6 @@
 #define IDR_MAINFRAME                   128
 #define IDD_AUTOSAVEDLG                 200
 #define IDD_HOTKEYDLG                   202
-#define IDD_STARTUPDLG                  206
 #define IDD_MANAGEPRESETSDLG            207
 #define IDD_EDITPRESETDLG               209
 #define IDC_EDIT_DIRECTORY              1066
@@ -22,11 +21,6 @@
 #define IDC_RENAME                      1076
 #define IDC_HOTKEY                      1078
 #define IDC_WARNING                     1079
-#define IDC_HOTKEY1                     1080
-#define IDC_USEINIFILE                  1081
-#define IDC_ENABLEAUTOSAVE              1082
-#define IDC_CONFIGUREAUTOSAVE           1084
-#define IDC_CONFIGUREHOTKEY             1085
 #define IDC_PRESETSCONFIGURE            1086
 #define IDC_PRESET_ADD                  1088
 #define IDC_PRESET_EDIT                 1089
@@ -39,6 +33,7 @@
 #define IDC_PRESET_H                    1096
 #define IDC_PRESET_MOVEUP               1097
 #define IDC_PRESET_MOVEDOWN             1098
+#define IDC_PRESET_RESTORE              1099
 #define ID_SCREEN_COPY                  32775
 #define ID_SCREEN_SAVE                  32776
 #define ID_VIEW_OPTIONS                 32777
@@ -54,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        211
 #define _APS_NEXT_COMMAND_VALUE         32782
-#define _APS_NEXT_CONTROL_VALUE         1099
+#define _APS_NEXT_CONTROL_VALUE         1100
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

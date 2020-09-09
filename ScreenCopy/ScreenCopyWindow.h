@@ -369,7 +369,7 @@ private:
         case VK_ESCAPE:
             ShowWindow(SW_HIDE);
         }
-        MoveWindow(rcClient, false);
+//         MoveWindow(rcClient, false);
 
         bHandled = FALSE;
         return 0;
@@ -627,7 +627,14 @@ private:
     void ManagePresets()
     {
         CManagePresetsDlg dlg(m_presetsList);
-        if (dlg.DoModal() == IDOK)
+        int result = dlg.DoModal();
+        if (result >= ID_PRESET_FIRST && result < ID_PRESET_FIRST + 9)
+        {
+            m_presetsList = dlg.GetPresets();
+            int selIndex = result - ID_PRESET_FIRST;
+            RestorePreset(selIndex);
+        }
+        else if (result == IDOK)
         {
             m_presetsList = dlg.GetPresets();
         }

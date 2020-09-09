@@ -84,7 +84,7 @@ private:
     //---------------------------------------------------------------------------
     LRESULT OnOk(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        std::vector<wchar_t> buffer(m_nameEdit.GetWindowTextLength());
+        std::vector<wchar_t> buffer(m_nameEdit.GetWindowTextLength() + 1);
         m_nameEdit.GetWindowText(buffer.data(), buffer.size());
         m_preset.description = buffer.data();
 
@@ -131,8 +131,7 @@ public:
         COMMAND_ID_HANDLER(IDOK, OnOk)
         COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
         NOTIFY_HANDLER(IDC_LISTVIEW, LVN_ITEMCHANGED, OnListSelChange)
-        NOTIFY_HANDLER(IDC_LISTVIEW, LVN_BEGINDRAG, OnListSelChange)
-        NOTIFY_HANDLER(IDC_LISTVIEW, LVN_ITEMCHANGED, OnListSelChange)
+        NOTIFY_HANDLER(IDC_LISTVIEW, NM_DBLCLK, OnListItemDblClick)
     END_MSG_MAP()
 
     //---------------------------------------------------------------------------
@@ -232,7 +231,7 @@ private:
     //---------------------------------------------------------------------------
     LRESULT OnMoveUp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        size_t selIndex = m_listView.GetSelectedIndex();
+        int selIndex = m_listView.GetSelectedIndex();
         if (selIndex > 0)
         {
             MovePresetItem(selIndex, selIndex - 1);
@@ -246,7 +245,7 @@ private:
     //---------------------------------------------------------------------------
     LRESULT OnMoveDown(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        size_t selIndex = m_listView.GetSelectedIndex();
+        int selIndex = m_listView.GetSelectedIndex();
         if (selIndex < m_listView.GetItemCount() - 1)
         {
             MovePresetItem(selIndex, selIndex + 1);
@@ -257,7 +256,7 @@ private:
         return 0;
     }
 
-//---------------------------------------------------------------------------
+    //---------------------------------------------------------------------------
     void MovePresetItem(size_t from, size_t to)
     {
         if (to > m_presetsList.size())
@@ -284,13 +283,27 @@ private:
     //-------------------------------------------------------------------------
     LRESULT OnListSelChange(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
     {
+        int selIndex = m_listView.GetSelectedIndex();
+
+        bool canEdit = selIndex != -1 && !m_presetsList.empty();
+        ::EnableWindow(GetDlgItem(IDC_PRESET_EDIT), canEdit);
+        ::EnableWindow(GetDlgItem(IDC_PRESET_DELETE), canEdit);
+        bool canMoveUp = selIndex != -1 && selIndex > 0;
+        ::EnableWindow(GetDlgItem(IDC_PRESET_MOVEUP), canMoveUp);
+        bool canMoveDown = selIndex != -1 && selIndex < m_listView.GetItemCount() - 1;
+        ::EnableWindow(GetDlgItem(IDC_PRESET_MOVEDOWN), canMoveDown);
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnListItemDblClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
+    {
+//         auto lpnmitem = reinterpret_cast<LPNMITEMACTIVATE>(pnmh);
         size_t selIndex = m_listView.GetSelectedIndex();
-        bool enable = !m_presetsList.empty() && selIndex != -1;
-        ::EnableWindow(GetDlgItem(IDC_PRESET_EDIT), enable);
-        ::EnableWindow(GetDlgItem(IDC_PRESET_DELETE), enable);
-        
-        ::EnableWindow(GetDlgItem(IDC_PRESET_MOVEUP), selIndex > 0);
-        ::EnableWindow(GetDlgItem(IDC_PRESET_MOVEDOWN), selIndex < m_listView.GetItemCount() - 1);
+
+        // Close dialog and select preset
+        EndDialog(ID_PRESET_FIRST + selIndex);
+
         return 0;
     }
 
