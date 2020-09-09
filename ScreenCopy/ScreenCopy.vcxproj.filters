@@ -62,6 +62,9 @@
     <ClInclude Include="ImageSaver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TrayIcon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ScreenCopy.rc">

@@ -36,11 +36,12 @@
 #define IDC_PRESET_RESTORE              1099
 #define ID_SCREEN_COPY                  32775
 #define ID_SCREEN_SAVE                  32776
-#define ID_VIEW_OPTIONS                 32777
-#define ID_VIEW_CLOSE                   32778
-#define ID_VIEW_HOTKEY                  32779
-#define ID_VIEW_PRESETS                 32780
-#define ID_SCREEN_SAVEAS                32781
+#define ID_SCREEN_SAVEAS                32777
+#define ID_VIEW_AUTOSAVE                 32778
+#define ID_VIEW_CLOSE                   32779
+#define ID_VIEW_HOTKEY                  32780
+#define ID_VIEW_PRESETS                 32781
+#define ID_VIEW_RESTORE                 32782
 #define ID_PRESET_FIRST                 50000
 
 // Next default values for new objects
@@ -48,7 +49,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        211
-#define _APS_NEXT_COMMAND_VALUE         32782
+#define _APS_NEXT_COMMAND_VALUE         32783
 #define _APS_NEXT_CONTROL_VALUE         1100
 #define _APS_NEXT_SYMED_VALUE           103
 #endif

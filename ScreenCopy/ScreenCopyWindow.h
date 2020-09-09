@@ -6,6 +6,7 @@
 #include "AutoSaveDlg.h"
 #include "HotkeyDlg.h"
 #include "PresetsDlg.h"
+#include "TrayIcon.h"
 
 /////////////////////////////////////////////////////////////////////////////
 /// Array of connected monitors
@@ -32,8 +33,10 @@ class CScreenWindow : public CWindowImpl<CScreenWindow, CWindow,
           CWinTraits<WS_VISIBLE | WS_POPUP, WS_EX_LAYERED | WS_EX_TOPMOST>>
 {
     bool m_bHasFocus;
+    CTrayIcon m_trayIcon;
     Hotkey m_hotkey;
     PresetsList m_presetsList;
+    UINT WM_TASKBARCREATED;
 
 public:
     DECLARE_WND_CLASS_EX(L"ScreenCopyWindowClass", 0, COLOR_WINDOW)
@@ -46,6 +49,8 @@ private:
     MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     MESSAGE_HANDLER(WM_SYSKEYDOWN, OnSysKeyDown)
+    MESSAGE_HANDLER(CTrayIcon::TRAYICONNOTIFY, OnTrayNotify)
+    MESSAGE_HANDLER(WM_TASKBARCREATED, OnTaskbarCreated)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
     MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
     MESSAGE_HANDLER(WM_HOTKEY, OnHotKey)
@@ -73,6 +78,17 @@ private:
             ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON),
             LR_DEFAULTCOLOR);
         SetIcon(hIconSmall, FALSE);
+
+        // Tray-icon
+        std::wstring sHintText = L"ScreenCopy";
+        m_trayIcon.Init(m_hWnd, hIconSmall, sHintText.c_str());
+
+        // We want to be notified when the task-bar restarts
+        // so we can make our trayicon show after a crash of explorer
+        // MSDN Home -> MSDN Library -> User Interface Design and Development ->
+        // Shell Programmers Guide ->  Intermediate Shell Techniques ->
+        // Programming the Shell -> The Taskbar
+        UINT WM_TASKBARCREATED = ::RegisterWindowMessage(L"TaskbarCreated");
 
         // Window
         CSettings settings;
@@ -111,6 +127,8 @@ private:
                 return -1;
             }
         }
+
+
         return 0;
     }
 
@@ -119,10 +137,9 @@ private:
     {
         CSettings settings;
         settings.SaveWindowPlacement(m_hWnd, L"main");
-
         m_hotkey.UnRegister(m_hWnd, 1);
         m_hotkey.Save();
-
+        m_trayIcon.Remove();
         SavePresets();
 
         bHandled = FALSE;
@@ -200,7 +217,7 @@ private:
         popupMenu.AppendMenu(MF_SEPARATOR);
         AppendPresetMenu(popupMenu);
         popupMenu.AppendMenu(MF_STRING, ID_VIEW_HOTKEY, L"Hotkey...");
-        popupMenu.AppendMenu(MF_STRING, ID_VIEW_OPTIONS, L"Autosave...");
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_AUTOSAVE, L"Autosave...");
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, L"About");
         popupMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit\t&X");
@@ -269,7 +286,7 @@ private:
             SelectAndRegisterHotkey();
             break;
         }
-        case ID_VIEW_OPTIONS:
+        case ID_VIEW_AUTOSAVE:
         {
             CAutoSaveDlg dlg;
             dlg.DoModal();
@@ -494,6 +511,71 @@ private:
             }
         }
         return hit;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnTaskbarCreated(
+        UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    {
+        // Windows Explorer has restarted
+        m_trayIcon.Restore();
+        return 0;
+    }
+
+    //----------------------------------------------------------------------------
+    LRESULT OnTrayNotify(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
+    {
+        switch (lParam)
+        {
+        case WM_LBUTTONUP:
+            HandleTrayMenu();
+//             switch (ShowTrayMenu())
+//             {
+//             case ID_VIEW_RESTORE:
+//                 break;
+//             case ID_VIEW_HOTKEY:
+//                 break;
+//             case ID_VIEW_AUTOSAVE:
+//                 break;
+//             case ID_VIEW_PRESETS:
+//                 break;
+//             case ID_APP_ABOUT:
+//                 break;
+//             case ID_APP_EXIT:
+//                 break;
+//             }
+            break;
+        case WM_RBUTTONUP:
+            SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+            ShowWindow(SW_SHOW);
+            break;
+        }
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    void HandleTrayMenu()
+    {
+        CMenu trayMenu;
+        trayMenu.CreatePopupMenu();
+
+        trayMenu.AppendMenu(MF_STRING, ID_VIEW_RESTORE, L"Restore");
+        trayMenu.AppendMenu(MF_SEPARATOR);
+        trayMenu.AppendMenu(MF_STRING, ID_VIEW_HOTKEY, L"Hotkey...");
+        trayMenu.AppendMenu(MF_STRING, ID_VIEW_AUTOSAVE, L"Autosave...");
+        trayMenu.AppendMenu(MF_STRING, ID_VIEW_PRESETS, L"Presets...");
+        trayMenu.AppendMenu(MF_SEPARATOR);
+        trayMenu.AppendMenu(MF_STRING, ID_APP_ABOUT, L"About");
+        trayMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit");
+        trayMenu.SetMenuDefaultItem(ID_VIEW_RESTORE, FALSE);
+
+        // Pop-up where the mouse button was pressed
+        CPoint ptMouse;
+        ::GetCursorPos(&ptMouse);
+        int cmd = trayMenu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RETURNCMD, 
+            ptMouse.x, ptMouse.y, m_hWnd);
+
+        DispatchMenuCommand(cmd);
     }
 
     //-------------------------------------------------------------------------
