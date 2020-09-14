@@ -386,7 +386,7 @@ private:
         case VK_ESCAPE:
             ShowWindow(SW_HIDE);
         }
-//         MoveWindow(rcClient, false);
+        MoveWindow(rcClient, false);
 
         bHandled = FALSE;
         return 0;
