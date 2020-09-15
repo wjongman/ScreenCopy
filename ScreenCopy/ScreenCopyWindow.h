@@ -410,7 +410,7 @@ private:
             case '7':
             case '8':
             case '9':
-                // '1' means preset[0]
+                // 'Alt-1' means preset[0]
                 RestorePreset(wParam - '0' - 1);
             }
         }
