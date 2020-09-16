@@ -34,7 +34,8 @@
 #define IDC_PRESET_MOVEUP               1097
 #define IDC_PRESET_MOVEDOWN             1098
 #define IDC_PRESET_RESTORE              1099
-#define ID_SCREEN_COPY                  32775
+#define ID_SCREEN_COPY                  32774
+#define ID_SCREEN_DRAG                  32775
 #define ID_SCREEN_SAVE                  32776
 #define ID_SCREEN_SAVEAS                32777
 #define ID_VIEW_AUTOSAVE                 32778

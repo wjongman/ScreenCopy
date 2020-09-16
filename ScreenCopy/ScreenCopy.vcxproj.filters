@@ -65,6 +65,12 @@
     <ClInclude Include="TrayIcon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DragViewWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DropSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ScreenCopy.rc">
