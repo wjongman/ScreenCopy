@@ -7,6 +7,7 @@
 #include "HotkeyDlg.h"
 #include "PresetsDlg.h"
 #include "TrayIcon.h"
+#include "DragViewWindow.h"
 
 /////////////////////////////////////////////////////////////////////////////
 /// Array of connected monitors
@@ -37,6 +38,7 @@ class CScreenWindow : public CWindowImpl<CScreenWindow, CWindow,
     Hotkey m_hotkey;
     PresetsList m_presetsList;
     UINT WM_TASKBARCREATED;
+    CDragViewWindow m_dragWindow;
 
 public:
     DECLARE_WND_CLASS_EX(L"ScreenCopyWindowClass", 0, COLOR_WINDOW)
@@ -213,6 +215,7 @@ private:
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_DRAG, L"Drag\t&D");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...\tShift+&S");
         popupMenu.AppendMenu(MF_SEPARATOR);
         AppendPresetMenu(popupMenu);
@@ -273,6 +276,12 @@ private:
         {
             ShowWindow(SW_HIDE);
             SaveScreen();
+            break;
+        }
+        case ID_SCREEN_DRAG:
+        {
+            ShowWindow(SW_HIDE);
+            DragScreen();
             break;
         }
         case ID_SCREEN_SAVEAS:
@@ -770,6 +779,19 @@ private:
     }
 
     //-------------------------------------------------------------------------
+    void DragScreen()
+    {
+        CRect rcWindow;
+        GetWindowRect(&rcWindow);
+        HBITMAP hBmp = GrabScreen(rcWindow);
+        ImageSaver saver;
+        saver.SaveDragImage(hBmp);
+        CPoint ptMouse;
+        GetCursorPos(&ptMouse);
+        ShowDragViewWindow(ptMouse);
+    }
+
+    //-------------------------------------------------------------------------
     void SaveScreenAs()
     {
         CRect rcWindow;
@@ -777,6 +799,25 @@ private:
         HBITMAP hBmp = GrabScreen(rcWindow);
         ImageSaver saver;
         saver.SaveImageAs(hBmp);
+    }
+
+    //-------------------------------------------------------------------------
+    void ShowDragViewWindow(CPoint const& ptShow)
+    {
+        CSettings settings;
+        std::wstring savePath = settings.GetString(L"autosave", L"directory", GetDesktopPath()).c_str();
+
+        CRect rcWindow;
+        GetWindowRect(&rcWindow);
+        if (!m_dragWindow.IsWindow())
+        {
+            m_dragWindow.Create(m_hWnd);
+        }
+        m_dragWindow.SetDragFilePath(savePath + L"\\ScreenCopy.png");
+        CRect rcDrag{ 0, 0, 64, 64 }; 
+//         ptShow.Offset({ -32, -32 });
+        rcDrag.OffsetRect( ptShow.x - 32, ptShow.y - 32 );
+        m_dragWindow.SetWindowPos(HWND_TOP, &rcDrag, SWP_SHOWWINDOW);
     }
 
     //-------------------------------------------------------------------------

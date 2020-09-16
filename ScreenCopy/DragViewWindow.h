@@ -13,6 +13,7 @@ class CDragViewWindow : public CWindowImpl<CDragViewWindow, CWindow,
     HDC m_memDC = NULL; // Memory DC for buffered drawing of our bitmap
     bool m_bDragging = false;
     CPoint m_ptLastMouse = { 0 };
+    std::wstring m_dragFilePath;
 
 public:
     DECLARE_WND_CLASS(NULL)
@@ -31,6 +32,7 @@ public:
     BEGIN_MSG_MAP(CDragViewWindow)
     MESSAGE_HANDLER(WM_CREATE, OnCreate)
     MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+//     MESSAGE_HANDLER(WM_CLOSE, OnClose)
     MESSAGE_HANDLER(WM_PAINT, OnPaint)
     MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
     MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
@@ -41,7 +43,13 @@ public:
 //  LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 //  LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
-    //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+    void SetDragFilePath(std::wstring const& filePath)
+    {
+        m_dragFilePath = filePath;
+    }
+
+//-------------------------------------------------------------------------
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         // At this stage we have a valid HWND so now we can get
@@ -53,7 +61,7 @@ public:
         CRect rcWindow = { 0, 0, 64, 64 };
         SetWindowPos(HWND_TOP, &rcWindow, SW_HIDE);
         CenterWindow();
-        ShowWindow(SW_SHOW);
+//         ShowWindow(SW_SHOW);
         return 0;
     }
 
@@ -62,6 +70,13 @@ public:
     {
         ::DeleteDC(m_memDC);
         // Avoid losing foreground focus
+        bHandled = FALSE;
+        return 1;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnClose(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+    {
         bHandled = FALSE;
         return 1;
     }
@@ -103,17 +118,18 @@ public:
 
             m_ptLastMouse = ptMouse;
             SetCapture();
-            BeginDrag();
+            BeginDrag(m_dragFilePath);
             ReleaseCapture();
             m_bDragging = false;
+            ShowWindow(SW_HIDE);
         }
         return 0;
     }
 
-    LRESULT BeginDrag()
+    LRESULT BeginDrag(std::wstring const& filePath)
     {
         IDataObject* pdto;
-        if (SUCCEEDED(GetUIObjectOfFile(m_hWnd, L"C:\\etc\\_Test\\thumbnails\\test2.png", IID_IDataObject, (void**)&pdto)))
+        if (SUCCEEDED(GetUIObjectOfFile(m_hWnd, filePath.c_str(), IID_IDataObject, (void**)&pdto)))
         {
             IDropSource* pds = new CDropSource();
             if (pds)
