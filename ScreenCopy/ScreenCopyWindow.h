@@ -368,6 +368,11 @@ private:
             CopyScreen();
             break;
 
+        case 'D':
+            ShowWindow(SW_HIDE);
+            DragScreen();
+            break;
+
         case 'S':
             ShowWindow(SW_HIDE);
             if (::GetKeyState(VK_SHIFT) & 0x8000)

@@ -68,7 +68,7 @@
     <ClInclude Include="DragViewWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DropSource.h">
+    <ClInclude Include="DragSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

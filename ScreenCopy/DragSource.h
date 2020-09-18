@@ -6,6 +6,11 @@
 // https://devblogs.microsoft.com/oldnewthing/20041206-00/?p=37133
 //
 #include <oleidl.h>
+#include <shtypes.h>
+#include <shobjidl.h>
+#include <shlobj.h>
+#include <atlcomcli.h>
+
 class CDropSource : public IDropSource
 {
 public:

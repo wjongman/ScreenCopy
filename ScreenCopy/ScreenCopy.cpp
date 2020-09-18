@@ -9,7 +9,6 @@
 
 #include "resource.h"
 
-//#include "DragViewWindow.h"
 #include "ScreenCopyWindow.h"
 #include "about.h"
 
@@ -33,15 +32,12 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
     _Module.AddMessageLoop(&theLoop);
 
     CScreenWindow wndMain;
-//     CDragViewWindow wndMain;
 
     if (wndMain.Create(0) == NULL)
     {
         ATLTRACE(_T("Main window creation failed!\n"));
         return 0;
     }
-
-    //   wndMain.ShowWindow(nCmdShow);
 
     int nRet = theLoop.Run();
 
