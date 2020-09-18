@@ -29,6 +29,7 @@ extern CAppModule _Module;
 #include <shobjidl.h>
 #include <shlobj.h>
 #include <atlcomcli.h>
+#include <gdiplus.h>
 
 #ifdef _UNICODE
 #if defined _M_IX86

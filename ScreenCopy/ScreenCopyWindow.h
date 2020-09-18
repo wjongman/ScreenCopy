@@ -819,9 +819,9 @@ private:
             m_dragWindow.Create(m_hWnd);
         }
         m_dragWindow.SetDragFilePath(savePath + L"\\ScreenCopy.png");
-        CRect rcDrag{ 0, 0, 64, 64 }; 
+        CRect rcDrag{ 0, 0, 96, 96 }; 
 //         ptShow.Offset({ -32, -32 });
-        rcDrag.OffsetRect( ptShow.x - 32, ptShow.y - 32 );
+        rcDrag.OffsetRect( ptShow.x - 48, ptShow.y - 48 );
         m_dragWindow.SetWindowPos(HWND_TOP, &rcDrag, SWP_SHOWWINDOW);
     }
 
