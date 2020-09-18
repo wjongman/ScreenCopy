@@ -41,7 +41,7 @@ public:
     //-------------------------------------------------------------------------
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
-        CRect rcWindow = { 0, 0, 64, 64 };
+        CRect rcWindow = { 0, 0, 96, 96 };
         SetWindowPos(HWND_TOP, &rcWindow, SW_HIDE);
         CenterWindow();
         SetWindowText(L"drag");
@@ -107,44 +107,20 @@ public:
 
         CRect rcClient;
         GetClientRect(&rcClient);
-        Gdiplus::Bitmap bitmap(m_dragFilePath.c_str());
+        int destSize = max(rcClient.Width(), rcClient.Height());
 
-        int cx = bitmap.GetWidth();
-        int cy = bitmap.GetHeight();
+        Gdiplus::Bitmap srcBmp(m_dragFilePath.c_str());
+        int srcSize = max(srcBmp.GetWidth(), srcBmp.GetHeight());
 
+        float scale = (float)destSize / (float)srcSize;
 
-        CDC memDC = CreateCompatibleDC(dc);
-        HBITMAP hBmp;
-        bitmap.GetHBITMAP(RGB(0, 0, 0), &hBmp);
-        CBitmapHandle bmpOld = memDC.SelectBitmap(hBmp);
+        Gdiplus::Bitmap destBmp(rcClient.Width(), rcClient.Height());
+        Gdiplus::Graphics g(dc);
 
-        CRect rcPage{ 0, 0, 64, 64 };
-        // calc scaling factor, so that image is not too small
-        // (based on the width only, max 3/4 width)
-        int nScale = ::MulDiv(rcPage.right, 3, 4) / cx;
-        if (nScale == 0) // too big already
-            nScale = 1;
-        // calc margins to center bitmap
-        int xOff = (rcPage.right - nScale * cx) / 2;
-        if (xOff < 0)
-            xOff = 0;
-        int yOff = (rcPage.bottom - nScale * cy) / 2;
-        if (yOff < 0)
-            yOff = 0;
-        // ensure that preview doesn't go outside of the page
-        int cxBlt = nScale * cx;
-        if (xOff + cxBlt > rcPage.right)
-            cxBlt = rcPage.right - xOff;
-        int cyBlt = nScale * cy;
-        if (yOff + cyBlt > rcPage.bottom)
-            cyBlt = rcPage.bottom - yOff;
+        g.ScaleTransform(scale, scale);
+        g.DrawImage(&srcBmp, 0, 0);
 
-        // paint bitmap image
-        ::StretchBlt(dc, xOff, yOff, cxBlt, cyBlt, memDC, 0, 0, cx, cy, SRCCOPY);
-
-        memDC.SelectBitmap(bmpOld);
         return 0;
     }
     
-
 };
