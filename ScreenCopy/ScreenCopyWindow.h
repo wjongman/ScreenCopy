@@ -541,25 +541,10 @@ private:
     {
         switch (lParam)
         {
-        case WM_LBUTTONUP:
-            HandleTrayMenu();
-//             switch (ShowTrayMenu())
-//             {
-//             case ID_VIEW_RESTORE:
-//                 break;
-//             case ID_VIEW_HOTKEY:
-//                 break;
-//             case ID_VIEW_AUTOSAVE:
-//                 break;
-//             case ID_VIEW_PRESETS:
-//                 break;
-//             case ID_APP_ABOUT:
-//                 break;
-//             case ID_APP_EXIT:
-//                 break;
-//             }
-            break;
         case WM_RBUTTONUP:
+            HandleTrayMenu();
+            break;
+        case WM_LBUTTONUP:
             SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
             ShowWindow(SW_SHOW);
             break;
