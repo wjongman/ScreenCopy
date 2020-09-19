@@ -8,6 +8,7 @@
 #include <gdiplus.h>
 #pragma comment(lib, "Gdiplus.lib")
 #include "ImageSaver.h"
+#include "Clipboard.h"
 
 class CDragViewWindow : public CWindowImpl<CDragViewWindow, CWindow,
                             CWinTraits<WS_BORDER | WS_SYSMENU | WS_THICKFRAME, WS_EX_TOOLWINDOW>>
@@ -80,10 +81,12 @@ private:
         CMenu popupMenu;
         popupMenu.CreatePopupMenu();
 
-        popupMenu.AppendMenu(MF_STRING, ID_VIEW_CLOSE, L"Close");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save Scaled");
         popupMenu.AppendMenu(MF_SEPARATOR);
-        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save Rescaled");
-        popupMenu.SetMenuDefaultItem(ID_VIEW_CLOSE, FALSE);
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy File Path");
+        popupMenu.AppendMenu(MF_SEPARATOR);
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_CLOSE, L"Close");
+//         popupMenu.SetMenuDefaultItem(ID_VIEW_CLOSE, FALSE);
 
         // Pop-up where the right mouse button was pressed
         UINT cmd = popupMenu.TrackPopupMenu(
@@ -96,6 +99,9 @@ private:
             break;
         case ID_SCREEN_SAVE:
             SaveScaledDragImage();
+            break;
+        case ID_SCREEN_COPY:
+            Clipboard::Write(m_dragFilePath.c_str());
             break;
         default:
             break;
@@ -119,7 +125,14 @@ private:
             BeginDrag(m_dragFilePath);
             ReleaseCapture();
             m_bDragging = false;
-            ShowWindow(SW_HIDE);
+            // Hide if button released outside client area
+            CPoint ptMouse{ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            CRect rcClient;
+            GetClientRect(&rcClient);
+            if (!PtInRect(&rcClient, ptMouse))
+            {
+                ShowWindow(SW_HIDE);
+            }
         }
         return 0;
     }

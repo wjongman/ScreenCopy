@@ -58,6 +58,8 @@ HRESULT CDropSource::QueryInterface(REFIID riid, void** ppv)
 
 ULONG CDropSource::AddRef() { return ++m_cRef; }
 
+#pragma warning(push)
+#pragma warning(disable : 4146) // unary minus operator applied to unsigned type, result still unsigned
 ULONG CDropSource::Release()
 {
     ULONG cRef = -m_cRef;
@@ -65,6 +67,7 @@ ULONG CDropSource::Release()
         delete this;
     return cRef;
 }
+#pragma warning(pop)
 
 HRESULT CDropSource::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState)
 {
