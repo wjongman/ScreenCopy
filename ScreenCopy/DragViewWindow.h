@@ -201,20 +201,22 @@ private:
         int targetH = rcTarget.Height();
         int targetSize = min(targetW, targetH);
 
-        Gdiplus::Bitmap srcBmp(filePath.c_str());
-        int srcW = srcBmp.GetWidth();
-        int srcH = srcBmp.GetHeight();
-        int srcSize = max(srcW, srcH);
+        Gdiplus::Bitmap sourceBmp(filePath.c_str());
+        int sourceW = sourceBmp.GetWidth();
+        int sourceH = sourceBmp.GetHeight();
+        int sourceSize = 0;// = max(sourceW, sourceH);
 
-        float scale = (float)targetSize / (float)srcSize;
+        float scaleW = ((float)targetW / (float)sourceW);
+        float scaleH = ((float)targetH / (float)sourceH);
+        float scale = (scaleW < scaleH) ? scaleW : scaleH;
 
-        int resultW = (int)(srcW * scale);
-        int resultH = (int)(srcH * scale);
+        int resultW = (int)(sourceW * scale);
+        int resultH = (int)(sourceH * scale);
 
         Gdiplus::Bitmap resultBmp(resultW, resultH);
         Gdiplus::Graphics g(&resultBmp);
         g.ScaleTransform(scale, scale);
-        g.DrawImage(&srcBmp, 0, 0);
+        g.DrawImage(&sourceBmp, 0, 0);
 
         return BitmapPtr(resultBmp.Clone(0, 0, resultW, resultH, PixelFormat32bppARGB));
     }
