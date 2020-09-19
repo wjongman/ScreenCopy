@@ -98,7 +98,7 @@ private:
             ShowWindow(SW_HIDE);
             break;
         case ID_SCREEN_SAVE:
-            SaveScaledDragImage();
+            SaveScaledDragImage(m_dragFilePath);
             break;
         case ID_SCREEN_COPY:
             Clipboard::Write(m_dragFilePath.c_str());
@@ -163,33 +163,48 @@ private:
         GetClientRect(&rcClient);
         dc.FillRect(rcClient, COLOR_APPWORKSPACE);
 
-        Gdiplus::Bitmap* scaledBmp = GetScaledDragImage();
+        Gdiplus::Bitmap* scaledBmp = GetScaledBitmap(m_dragFilePath, rcClient);
 
         int offsetX = (rcClient.Width() - scaledBmp->GetWidth()) / 2;
         int offsetY = (rcClient.Height() - scaledBmp->GetHeight()) / 2;
 
         Gdiplus::Graphics g(dc);
         g.DrawImage(scaledBmp, offsetX, offsetY);
-
+        delete scaledBmp;
         return 0;
     }
 
     //-------------------------------------------------------------------------
-    Gdiplus::Bitmap* GetScaledDragImage()
+    void SaveScaledDragImage(std::wstring const& filePath)
     {
         CRect rcClient;
         GetClientRect(&rcClient);
+        Gdiplus::Bitmap* scaledBmp = GetScaledBitmap(filePath, rcClient);
+        HBITMAP hDestBmp;
+        Gdiplus::Status status = scaledBmp->GetHBITMAP(RGB(0, 0, 0), &hDestBmp);
+        if (status == Gdiplus::Ok)
+        {
+            ImageSaver saver;
+            saver.SaveDragImage(hDestBmp);
+        }
+        delete scaledBmp;
+    }
 
-        int clientW = rcClient.Width();
-        int clientH = rcClient.Height();
-        int destSize = min(clientW, clientH);
+    //-------------------------------------------------------------------------
+    Gdiplus::Bitmap* GetScaledBitmap(std::wstring const& filePath, CRect const& rcTarget)
+    {
+        ATLASSERT(!filePath.empty());
 
-        Gdiplus::Bitmap srcBmp(m_dragFilePath.c_str());
+        int targetW = rcTarget.Width();
+        int targetH = rcTarget.Height();
+        int targetSize = min(targetW, targetH);
+
+        Gdiplus::Bitmap srcBmp(filePath.c_str());
         int srcW = srcBmp.GetWidth();
         int srcH = srcBmp.GetHeight();
         int srcSize = max(srcW, srcH);
 
-        float scale = (float)destSize / (float)srcSize;
+        float scale = (float)targetSize / (float)srcSize;
 
         int resultW = (int)(srcW * scale);
         int resultH = (int)(srcH * scale);
@@ -202,16 +217,4 @@ private:
         return resultBmp.Clone(0, 0, resultW, resultH, PixelFormat32bppARGB);
     }
 
-    //-------------------------------------------------------------------------
-    void SaveScaledDragImage()
-    {
-        Gdiplus::Bitmap* scaledBmp = GetScaledDragImage();
-        HBITMAP hDestBmp;
-        Gdiplus::Status status = scaledBmp->GetHBITMAP(RGB(0, 0, 0), &hDestBmp);
-        if (status == Gdiplus::Ok)
-        {
-            ImageSaver saver;
-            saver.SaveDragImage(hDestBmp);
-        }
-    }
 };
