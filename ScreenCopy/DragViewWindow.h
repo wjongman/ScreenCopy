@@ -9,6 +9,7 @@
 #pragma comment(lib, "Gdiplus.lib")
 #include "ImageSaver.h"
 #include "Clipboard.h"
+#include <memory>
 
 class CDragViewWindow : public CWindowImpl<CDragViewWindow, CWindow,
                             CWinTraits<WS_BORDER | WS_SYSMENU | WS_THICKFRAME, WS_EX_TOOLWINDOW>>
@@ -155,6 +156,8 @@ private:
         return 0;
     }
 
+    using BitmapPtr = std::unique_ptr<Gdiplus::Bitmap>;
+
     //-------------------------------------------------------------------------
     LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
@@ -163,14 +166,14 @@ private:
         GetClientRect(&rcClient);
         dc.FillRect(rcClient, COLOR_APPWORKSPACE);
 
-        Gdiplus::Bitmap* scaledBmp = GetScaledBitmap(m_dragFilePath, rcClient);
+        BitmapPtr pScaledBmp = GetScaledBitmap(m_dragFilePath, rcClient);
 
-        int offsetX = (rcClient.Width() - scaledBmp->GetWidth()) / 2;
-        int offsetY = (rcClient.Height() - scaledBmp->GetHeight()) / 2;
+        int offsetX = (rcClient.Width() - pScaledBmp->GetWidth()) / 2;
+        int offsetY = (rcClient.Height() - pScaledBmp->GetHeight()) / 2;
 
         Gdiplus::Graphics g(dc);
-        g.DrawImage(scaledBmp, offsetX, offsetY);
-        delete scaledBmp;
+        g.DrawImage(pScaledBmp.get(), offsetX, offsetY);
+
         return 0;
     }
 
@@ -179,7 +182,7 @@ private:
     {
         CRect rcClient;
         GetClientRect(&rcClient);
-        Gdiplus::Bitmap* scaledBmp = GetScaledBitmap(filePath, rcClient);
+        BitmapPtr scaledBmp = GetScaledBitmap(filePath, rcClient);
         HBITMAP hDestBmp;
         Gdiplus::Status status = scaledBmp->GetHBITMAP(RGB(0, 0, 0), &hDestBmp);
         if (status == Gdiplus::Ok)
@@ -187,11 +190,10 @@ private:
             ImageSaver saver;
             saver.SaveDragImage(hDestBmp);
         }
-        delete scaledBmp;
     }
 
     //-------------------------------------------------------------------------
-    Gdiplus::Bitmap* GetScaledBitmap(std::wstring const& filePath, CRect const& rcTarget)
+    BitmapPtr GetScaledBitmap(std::wstring const& filePath, CRect const& rcTarget)
     {
         ATLASSERT(!filePath.empty());
 
@@ -214,7 +216,7 @@ private:
         g.ScaleTransform(scale, scale);
         g.DrawImage(&srcBmp, 0, 0);
 
-        return resultBmp.Clone(0, 0, resultW, resultH, PixelFormat32bppARGB);
+        return BitmapPtr(resultBmp.Clone(0, 0, resultW, resultH, PixelFormat32bppARGB));
     }
-
+    
 };
