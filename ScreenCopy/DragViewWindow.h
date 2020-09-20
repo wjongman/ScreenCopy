@@ -7,16 +7,22 @@
 
 #include <gdiplus.h>
 #pragma comment(lib, "Gdiplus.lib")
+
+#include <memory>
 #include "ImageSaver.h"
 #include "Clipboard.h"
-#include <memory>
 
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Window that holds a draggable bitmap
+//
 class CDragViewWindow : public CWindowImpl<CDragViewWindow, CWindow,
                             CWinTraits<WS_BORDER | WS_SYSMENU | WS_THICKFRAME, WS_EX_TOOLWINDOW>>
 {
     ULONG_PTR m_gdiplusToken;
     bool m_bDragging = false;
     std::wstring m_dragFilePath;
+    HCURSOR m_cursor;
 
 public:
     DECLARE_WND_CLASS(NULL)
@@ -24,10 +30,12 @@ public:
     //-------------------------------------------------------------------------
     void SetDragFilePath(std::wstring const& filePath) 
     { 
-        m_dragFilePath = filePath; 
+        m_dragFilePath = filePath;
+        Invalidate();
     }
 
 private:
+    //-------------------------------------------------------------------------
     BOOL PreTranslateMessage(MSG* pMsg)
     {
         pMsg;
@@ -39,6 +47,7 @@ private:
     MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
     MESSAGE_HANDLER(WM_CLOSE, OnClose)
     MESSAGE_HANDLER(WM_PAINT, OnPaint)
+    MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
     MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
@@ -47,8 +56,10 @@ private:
     //-------------------------------------------------------------------------
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
-        SetWindowText(L"drag view");
-
+        SetWindowText(L"Drag Area");
+        m_cursor = ::LoadCursor(_Module.GetResourceInstance(), (LPCWSTR)IDC_DRAG);
+        ::SetClassLongPtr(m_hWnd, GCL_HCURSOR, (LONG)m_cursor);
+        ::SetClassLongPtr(m_hWnd, GCL_HBRBACKGROUND, COLOR_APPWORKSPACE+1);
         // Initialize GDI+.
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
@@ -102,7 +113,7 @@ private:
             SaveScaledDragImage(m_dragFilePath);
             break;
         case ID_SCREEN_COPY:
-            Clipboard::Write(m_dragFilePath.c_str());
+            Clipboard::Write(m_dragFilePath);
             break;
         default:
             break;
@@ -114,6 +125,24 @@ private:
     LRESULT OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         m_bDragging = true;
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
+    {
+        if (wParam == VK_ESCAPE)
+        {
+            ShowWindow(SW_HIDE);
+        }
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnSetCursor(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+    {
+//         SetCursor();
+        bHandled = true;
         return 0;
     }
 
@@ -157,22 +186,28 @@ private:
     }
 
     using BitmapPtr = std::unique_ptr<Gdiplus::Bitmap>;
-
     //-------------------------------------------------------------------------
     LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         CPaintDC dc(m_hWnd);
         CRect rcClient;
         GetClientRect(&rcClient);
-        dc.FillRect(rcClient, COLOR_APPWORKSPACE);
-
+        //dc.FillRect(rcClient, COLOR_APPWORKSPACE);
         BitmapPtr pScaledBmp = GetScaledBitmap(m_dragFilePath, rcClient);
 
-        int offsetX = (rcClient.Width() - pScaledBmp->GetWidth()) / 2;
-        int offsetY = (rcClient.Height() - pScaledBmp->GetHeight()) / 2;
+        int bmpW = pScaledBmp->GetWidth();
+        int bmpH = pScaledBmp->GetHeight();
+        int offsetX = (rcClient.Width() - bmpW) / 2;
+        int offsetY = (rcClient.Height() - bmpH) / 2;
+//         CRect rcFrame{ -1, -1, bmpW, bmpH };
+//         rcFrame.OffsetRect(offsetX, offsetY);
+//         dc.Rectangle(rcFrame);
 
         Gdiplus::Graphics g(dc);
         g.DrawImage(pScaledBmp.get(), offsetX, offsetY);
+        Gdiplus::Pen blackpen(Gdiplus::Color(0, 0, 0));
+        Gdiplus::Rect rcFrame(offsetX, offsetY, bmpW, bmpH);
+        g.DrawRectangle(&blackpen, rcFrame);
 
         return 0;
     }

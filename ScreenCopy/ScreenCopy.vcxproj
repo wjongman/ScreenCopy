@@ -233,6 +233,9 @@
   <ItemGroup>
     <Image Include="res\ScreenCopy.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="res\cursor1.cur" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
