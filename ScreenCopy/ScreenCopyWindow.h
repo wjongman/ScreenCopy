@@ -48,9 +48,12 @@ private:
     MESSAGE_HANDLER(WM_CREATE, OnCreate)
     MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
     MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChanging)
+    MESSAGE_HANDLER(WM_SIZING, OnSizing)
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     MESSAGE_HANDLER(WM_SYSKEYDOWN, OnSysKeyDown)
+    MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnLButtonDoubleClick)
     MESSAGE_HANDLER(CTrayIcon::TRAYICONNOTIFY, OnTrayNotify)
     MESSAGE_HANDLER(WM_TASKBARCREATED, OnTaskbarCreated)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -198,6 +201,82 @@ private:
 
         // Don't forget to set bHandled to false !!
         bHandled = false;
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnSizing(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        CRect rcCurrent;
+        GetWindowRect(&rcCurrent);
+        
+        // Constrain dimensions to square when shift key is down
+        bool shift = ::GetKeyState(VK_SHIFT) & 0x8000;
+        if (shift)
+        {
+            // https://stackoverflow.com/questions/20682975/resize-form-and-maintain-aspect-ratio
+            CRect* prcNew = reinterpret_cast<CRect*>(lParam);
+            int FAspectRatio = 1;
+            switch (wParam)
+            {
+            case WMSZ_LEFT:
+            case WMSZ_RIGHT:
+                prcNew->bottom = prcNew->top + (prcNew->Width() / FAspectRatio);
+                break;
+            case WMSZ_TOP:
+            case WMSZ_BOTTOM:
+                prcNew->right = prcNew->left + (prcNew->Height() * FAspectRatio);
+                break;
+
+            case WMSZ_TOPLEFT:
+            case WMSZ_TOPRIGHT:
+            case WMSZ_BOTTOMLEFT:
+            case WMSZ_BOTTOMRIGHT:
+            {
+                bool SizeBasedOnWidth;
+                if (prcNew->Width() > rcCurrent.Width())
+                {
+                    SizeBasedOnWidth = prcNew->Height()
+                        < MulDiv(rcCurrent.Height(), prcNew->Width(), rcCurrent.Width());
+                }
+                else
+                {
+                    SizeBasedOnWidth = prcNew->Width()
+                        > MulDiv(rcCurrent.Width(), prcNew->Height(), rcCurrent.Height());
+                }
+                if (SizeBasedOnWidth)
+                {
+                    int NewHeight = prcNew->Width() / FAspectRatio;
+                    switch (wParam)
+                    {
+                    case WMSZ_TOPLEFT:
+                    case WMSZ_TOPRIGHT:
+                        prcNew->top = prcNew->bottom - NewHeight;
+                        break;
+                    case WMSZ_BOTTOMLEFT:
+                    case WMSZ_BOTTOMRIGHT:
+                        prcNew->bottom = prcNew->top + NewHeight;
+                        break;
+                    }
+                }
+                else
+                {
+                    int NewWidth = prcNew->Height() * FAspectRatio;
+                    switch (wParam)
+                    {
+                    case WMSZ_TOPLEFT:
+                    case WMSZ_BOTTOMLEFT:
+                        prcNew->left = prcNew->right - NewWidth;
+                        break;
+                    case WMSZ_TOPRIGHT:
+                    case WMSZ_BOTTOMRIGHT:
+                        prcNew->right = prcNew->left + NewWidth;
+                        break;
+                    }
+                }
+            }
+            }
+        }
         return 0;
     }
 
@@ -432,6 +511,14 @@ private:
     }
 
     //-------------------------------------------------------------------------
+    LRESULT OnLButtonDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        DragScreen();
+        ShowWindow(SW_HIDE);
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
     LRESULT OnHotKey(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
     {
         SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
@@ -524,6 +611,7 @@ private:
                 return HTCAPTION;
             }
         }
+        bHandled = false;
         return hit;
     }
 

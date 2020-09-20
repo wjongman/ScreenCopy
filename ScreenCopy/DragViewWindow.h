@@ -49,6 +49,7 @@ private:
     MESSAGE_HANDLER(WM_PAINT, OnPaint)
     MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+    MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDoubleClick)
     MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
     END_MSG_MAP()
@@ -93,8 +94,9 @@ private:
         CMenu popupMenu;
         popupMenu.CreatePopupMenu();
 
-        popupMenu.AppendMenu(MF_STRING, ID_VIEW_RESTORE, L"ScreenCopy");
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_RESTORE, L"ScreenCopy\tDbl-Click");
         popupMenu.AppendMenu(MF_SEPARATOR);
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save Scaled");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy File Path");
         popupMenu.AppendMenu(MF_SEPARATOR);
@@ -108,17 +110,13 @@ private:
         switch (cmd)
         {
         case ID_VIEW_RESTORE:
+            RestoreCopyWindow();
+            break;
+        case ID_SCREEN_SAVEAS:
         {
-            HWND hwnd = ::FindWindow(L"ScreenCopyWindowClass", 0);
-            if (hwnd)
-            {
-                ::ShowWindow(hwnd, SW_SHOW);
-                ::SetForegroundWindow(hwnd);
-                ::BringWindowToTop(hwnd);
-                return 0;
-            }
+            SaveImageAs(m_dragFilePath);
+            break;
         }
-        break;
         case ID_SCREEN_SAVE:
             SaveScaledDragImage(m_dragFilePath);
             break;
@@ -131,6 +129,13 @@ private:
         default:
             break;
         }
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnLButtonDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        RestoreCopyWindow();
         return 0;
     }
 
@@ -241,6 +246,19 @@ private:
     }
 
     //-------------------------------------------------------------------------
+    void SaveImageAs(std::wstring const& filePath)
+    {
+        Gdiplus::Bitmap bitmap(filePath.c_str());
+        HBITMAP hBitmap;
+        Gdiplus::Status status = bitmap.GetHBITMAP(RGB(0, 0, 0), &hBitmap);
+        if (status == Gdiplus::Ok)
+        {
+            ImageSaver saver;
+            saver.SaveImageAs(hBitmap);
+        }
+    }
+
+    //-------------------------------------------------------------------------
     BitmapPtr GetScaledBitmap(std::wstring const& filePath, CRect const& rcTarget)
     {
         ATLASSERT(!filePath.empty());
@@ -269,4 +287,16 @@ private:
         return BitmapPtr(resultBmp.Clone(0, 0, resultW, resultH, PixelFormat32bppARGB));
     }
     
+    //-------------------------------------------------------------------------
+    void RestoreCopyWindow()
+    {
+        HWND hwnd = ::FindWindow(L"ScreenCopyWindowClass", 0);
+        if (hwnd)
+        {
+            ::ShowWindow(hwnd, SW_SHOW);
+            ::SetForegroundWindow(hwnd);
+            ::BringWindowToTop(hwnd);
+        }
+    }
+
 };
