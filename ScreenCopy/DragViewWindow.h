@@ -93,12 +93,13 @@ private:
         CMenu popupMenu;
         popupMenu.CreatePopupMenu();
 
-        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save Scaled");
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_RESTORE, L"ScreenCopy");
         popupMenu.AppendMenu(MF_SEPARATOR);
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save Scaled");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy File Path");
         popupMenu.AppendMenu(MF_SEPARATOR);
-        popupMenu.AppendMenu(MF_STRING, ID_VIEW_CLOSE, L"Close");
-//         popupMenu.SetMenuDefaultItem(ID_VIEW_CLOSE, FALSE);
+        popupMenu.AppendMenu(MF_STRING, ID_VIEW_CLOSE, L"Close\tEsc");
+        popupMenu.SetMenuDefaultItem(ID_VIEW_RESTORE, FALSE);
 
         // Pop-up where the right mouse button was pressed
         UINT cmd = popupMenu.TrackPopupMenu(
@@ -106,14 +107,26 @@ private:
 
         switch (cmd)
         {
-        case ID_VIEW_CLOSE:
-            ShowWindow(SW_HIDE);
-            break;
+        case ID_VIEW_RESTORE:
+        {
+            HWND hwnd = ::FindWindow(L"ScreenCopyWindowClass", 0);
+            if (hwnd)
+            {
+                ::ShowWindow(hwnd, SW_SHOW);
+                ::SetForegroundWindow(hwnd);
+                ::BringWindowToTop(hwnd);
+                return 0;
+            }
+        }
+        break;
         case ID_SCREEN_SAVE:
             SaveScaledDragImage(m_dragFilePath);
             break;
         case ID_SCREEN_COPY:
             Clipboard::Write(m_dragFilePath);
+            break;
+        case ID_VIEW_CLOSE:
+            ShowWindow(SW_HIDE);
             break;
         default:
             break;

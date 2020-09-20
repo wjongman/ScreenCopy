@@ -215,7 +215,7 @@ private:
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
-        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_DRAG, L"Drag\t&D");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_DRAG, L"Drag Area\t&D");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...\tShift+&S");
         popupMenu.AppendMenu(MF_SEPARATOR);
         AppendPresetMenu(popupMenu);
@@ -804,10 +804,12 @@ private:
             m_dragWindow.Create(m_hWnd);
         }
         m_dragWindow.SetDragFilePath(savePath + L"\\ScreenCopy.png");
-        CRect rcDrag{ 0, 0, 96, 96 }; 
-//         ptShow.Offset({ -32, -32 });
-        rcDrag.OffsetRect( ptShow.x - 48, ptShow.y - 48 );
-        m_dragWindow.SetWindowPos(HWND_TOP, &rcDrag, SWP_SHOWWINDOW);
+        if (!m_dragWindow.IsWindowVisible())
+        {
+            CRect rcDrag{ 0, 0, 120, 120 };
+            rcDrag.OffsetRect(ptShow.x - 60, ptShow.y - 60);
+            m_dragWindow.SetWindowPos(HWND_TOP, &rcDrag, SWP_SHOWWINDOW);
+        }
     }
 
     //-------------------------------------------------------------------------
