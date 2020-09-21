@@ -294,7 +294,7 @@ private:
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
-        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_DRAG, L"Drag Area\t&D");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_DRAG, L"Drag Area\tDbl-Click");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...\tShift+&S");
         popupMenu.AppendMenu(MF_SEPARATOR);
         AppendPresetMenu(popupMenu);
@@ -472,14 +472,15 @@ private:
             ManagePresets();
             break;
 
+        case VK_ESCAPE:
+            ShowWindow(SW_HIDE);
+
         case 'X':
             PostMessage(WM_CLOSE);
             break;
 
-        case VK_ESCAPE:
-            ShowWindow(SW_HIDE);
         }
-//         MoveWindow(rcClient, false);
+        MoveWindow(rcClient, false);
 
         bHandled = FALSE;
         return 0;
@@ -503,7 +504,7 @@ private:
             case '7':
             case '8':
             case '9':
-                // '1' means preset[0]
+                // 'Alt+1' means preset[0]
                 RestorePreset(wParam - '0' - 1);
             }
         }

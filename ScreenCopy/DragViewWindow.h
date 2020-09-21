@@ -58,9 +58,12 @@ private:
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         SetWindowText(L"Drag Area");
+        
+        // Have a drag cursor and set window brush
         m_cursor = ::LoadCursor(_Module.GetResourceInstance(), (LPCWSTR)IDC_DRAG);
         ::SetClassLongPtr(m_hWnd, GCL_HCURSOR, (LONG)m_cursor);
         ::SetClassLongPtr(m_hWnd, GCL_HBRBACKGROUND, COLOR_APPWORKSPACE+1);
+
         // Initialize GDI+.
         Gdiplus::GdiplusStartupInput gdiplusStartupInput;
         Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
@@ -72,7 +75,7 @@ private:
     {
         Gdiplus::GdiplusShutdown(m_gdiplusToken);
         ::DeleteFile(m_dragFilePath.c_str());
-        bHandled = FALSE;
+        bHandled = false;
         return 1;
     }
 
@@ -96,11 +99,12 @@ private:
 
         popupMenu.AppendMenu(MF_STRING, ID_VIEW_RESTORE, L"ScreenCopy\tDbl-Click");
         popupMenu.AppendMenu(MF_SEPARATOR);
-        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...");
-        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save Scaled");
-        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy File Path");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...\tShift+S");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save At This Scale\tCtrl+S");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy File Path\tCtrl+C");
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_VIEW_CLOSE, L"Close\tEsc");
+        popupMenu.AppendMenu(MF_STRING, ID_APP_EXIT, L"Exit\t&X");
         popupMenu.SetMenuDefaultItem(ID_VIEW_RESTORE, FALSE);
 
         // Pop-up where the right mouse button was pressed
@@ -118,13 +122,16 @@ private:
             break;
         }
         case ID_SCREEN_SAVE:
-            SaveScaledDragImage(m_dragFilePath);
+            SaveScaledImage(m_dragFilePath);
             break;
         case ID_SCREEN_COPY:
             Clipboard::Write(m_dragFilePath);
             break;
         case ID_VIEW_CLOSE:
             ShowWindow(SW_HIDE);
+            break;
+        case ID_APP_EXIT:
+            ExitApp();
             break;
         default:
             break;
@@ -149,18 +156,30 @@ private:
     //-------------------------------------------------------------------------
     LRESULT OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
     {
-        if (wParam == VK_ESCAPE)
+        switch (wParam)
         {
+        case 'S':
+            if (::GetKeyState(VK_SHIFT) & 0x8000)
+            {
+                SaveImageAs(m_dragFilePath);
+            }
+            if (::GetKeyState(VK_CONTROL) & 0x8000)
+            {
+                SaveScaledImage(m_dragFilePath);
+            }
+            break;
+        case 'C':
+            Clipboard::Write(m_dragFilePath);
+            break;
+        case VK_ESCAPE:
             ShowWindow(SW_HIDE);
+            break;
+        case 'X':
+            ExitApp();
+            break;
+        default:
+            break;
         }
-        return 0;
-    }
-
-    //-------------------------------------------------------------------------
-    LRESULT OnSetCursor(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
-    {
-//         SetCursor();
-        bHandled = true;
         return 0;
     }
 
@@ -173,14 +192,6 @@ private:
             BeginDrag(m_dragFilePath);
             ReleaseCapture();
             m_bDragging = false;
-            // Hide if button released outside client area
-            CPoint ptMouse{ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-            CRect rcClient;
-            GetClientRect(&rcClient);
-            if (!PtInRect(&rcClient, ptMouse))
-            {
-                ShowWindow(SW_HIDE);
-            }
         }
         return 0;
     }
@@ -196,8 +207,7 @@ private:
             {
                 DWORD dwEffect;
                 DoDragDrop(spDataObject, pDropSource, DROPEFFECT_COPY | DROPEFFECT_LINK, &dwEffect);
-                // pDropSource will delete itself when refcount becomes 0
-                pDropSource->Release();
+                pDropSource->Release(); // pDropSource will delete itself when refcount becomes 0
             }
         }
         return 0;
@@ -210,38 +220,40 @@ private:
         CPaintDC dc(m_hWnd);
         CRect rcClient;
         GetClientRect(&rcClient);
-        //dc.FillRect(rcClient, COLOR_APPWORKSPACE);
+
         BitmapPtr pScaledBmp = GetScaledBitmap(m_dragFilePath, rcClient);
+        if (pScaledBmp)
+        {
+            int bmpW = pScaledBmp->GetWidth();
+            int bmpH = pScaledBmp->GetHeight();
+            int offsetX = (rcClient.Width() - bmpW) / 2;
+            int offsetY = (rcClient.Height() - bmpH) / 2;
 
-        int bmpW = pScaledBmp->GetWidth();
-        int bmpH = pScaledBmp->GetHeight();
-        int offsetX = (rcClient.Width() - bmpW) / 2;
-        int offsetY = (rcClient.Height() - bmpH) / 2;
-//         CRect rcFrame{ -1, -1, bmpW, bmpH };
-//         rcFrame.OffsetRect(offsetX, offsetY);
-//         dc.Rectangle(rcFrame);
-
-        Gdiplus::Graphics g(dc);
-        g.DrawImage(pScaledBmp.get(), offsetX, offsetY);
-        Gdiplus::Pen blackpen(Gdiplus::Color(0, 0, 0));
-        Gdiplus::Rect rcFrame(offsetX, offsetY, bmpW, bmpH);
-        g.DrawRectangle(&blackpen, rcFrame);
-
+            Gdiplus::Graphics g(dc);
+            g.DrawImage(pScaledBmp.get(), offsetX, offsetY);
+            Gdiplus::Pen blackpen(Gdiplus::Color(0, 0, 0));
+            Gdiplus::Rect rcFrame(offsetX, offsetY, bmpW, bmpH);
+            g.DrawRectangle(&blackpen, rcFrame);
+        }
         return 0;
     }
 
     //-------------------------------------------------------------------------
-    void SaveScaledDragImage(std::wstring const& filePath)
+    void SaveScaledImage(std::wstring const& filePath)
     {
         CRect rcClient;
         GetClientRect(&rcClient);
-        BitmapPtr scaledBmp = GetScaledBitmap(filePath, rcClient);
-        HBITMAP hDestBmp;
-        Gdiplus::Status status = scaledBmp->GetHBITMAP(RGB(0, 0, 0), &hDestBmp);
-        if (status == Gdiplus::Ok)
+
+        BitmapPtr pScaledBmp = GetScaledBitmap(filePath, rcClient);
+        if (pScaledBmp)
         {
-            ImageSaver saver;
-            saver.SaveDragImage(hDestBmp);
+            HBITMAP hDestBmp;
+            Gdiplus::Status status = pScaledBmp->GetHBITMAP(RGB(0, 0, 0), &hDestBmp);
+            if (status == Gdiplus::Ok)
+            {
+                ImageSaver saver;
+                saver.SaveDragImage(hDestBmp);
+            }
         }
     }
 
@@ -265,12 +277,10 @@ private:
 
         int targetW = rcTarget.Width();
         int targetH = rcTarget.Height();
-        int targetSize = min(targetW, targetH);
 
         Gdiplus::Bitmap sourceBmp(filePath.c_str());
         int sourceW = sourceBmp.GetWidth();
         int sourceH = sourceBmp.GetHeight();
-        int sourceSize = 0;// = max(sourceW, sourceH);
 
         float scaleW = ((float)targetW / (float)sourceW);
         float scaleH = ((float)targetH / (float)sourceH);
@@ -296,6 +306,16 @@ private:
             ::ShowWindow(hwnd, SW_SHOW);
             ::SetForegroundWindow(hwnd);
             ::BringWindowToTop(hwnd);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    void ExitApp()
+    {
+        HWND hwnd = ::FindWindow(L"ScreenCopyWindowClass", 0);
+        if (hwnd)
+        {
+            ::PostMessage(hwnd, WM_CLOSE, 0, 0);
         }
     }
 
