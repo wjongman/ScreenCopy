@@ -98,5 +98,8 @@
     <None Include="..\readme.md">
       <Filter>Documents</Filter>
     </None>
+    <None Include="res\drag.cur">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

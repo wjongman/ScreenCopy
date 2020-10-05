@@ -11,7 +11,7 @@
 #include <shlobj.h>
 #include <atlcomcli.h>
 
-class CDropSource : public IDropSource
+class CDragSource : public IDropSource
 {
 public:
     // *** IUnknown ***
@@ -23,7 +23,7 @@ public:
     STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState);
     STDMETHODIMP GiveFeedback(DWORD dwEffect);
 
-    CDropSource()
+    CDragSource()
         : m_cRef(1)
     {
     }
@@ -32,7 +32,7 @@ private:
     ULONG m_cRef;
 };
 
-HRESULT CDropSource::QueryInterface(REFIID riid, void** ppv)
+HRESULT CDragSource::QueryInterface(REFIID riid, void** ppv)
 {
     IUnknown* punk = NULL;
     if (riid == IID_IUnknown)
@@ -56,11 +56,11 @@ HRESULT CDropSource::QueryInterface(REFIID riid, void** ppv)
     }
 }
 
-ULONG CDropSource::AddRef() { return ++m_cRef; }
+ULONG CDragSource::AddRef() { return ++m_cRef; }
 
 #pragma warning(push)
 #pragma warning(disable : 4146) // unary minus operator applied to unsigned type, result still unsigned
-ULONG CDropSource::Release()
+ULONG CDragSource::Release()
 {
     ULONG cRef = -m_cRef;
     if (cRef == 0)
@@ -69,7 +69,7 @@ ULONG CDropSource::Release()
 }
 #pragma warning(pop)
 
-HRESULT CDropSource::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState)
+HRESULT CDragSource::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState)
 {
     if (fEscapePressed)
         return DRAGDROP_S_CANCEL;
@@ -81,7 +81,7 @@ HRESULT CDropSource::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState)
     return S_OK;
 }
 
-HRESULT CDropSource::GiveFeedback(DWORD dwEffect) 
+HRESULT CDragSource::GiveFeedback(DWORD dwEffect) 
 { 
     return DRAGDROP_S_USEDEFAULTCURSORS; 
 }

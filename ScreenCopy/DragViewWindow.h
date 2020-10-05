@@ -202,7 +202,7 @@ private:
         CComPtr<IDataObject> spDataObject;
         if (SUCCEEDED(GetUIObjectOfFile(m_hWnd, filePath.c_str(), IID_PPV_ARGS(&spDataObject))))
         {
-            IDropSource* pDropSource = new CDropSource();
+            IDropSource* pDropSource = new CDragSource();
             if (pDropSource)
             {
                 DWORD dwEffect;

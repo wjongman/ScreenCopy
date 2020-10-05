@@ -19,15 +19,23 @@ When saving a file with autosave enabled it will not prompt for a filename, inst
 
 ![Autosave](images/autosave.png)
 
-#### Portability
-When starting, it will look for the file ScreenCopy.ini in it's program directory. If it is found, it will be used to store settings, else settings will be stored in the registry. 
+#### Drag Area
+Double clicking the selection window will transfer the selection to the "Snap Area".
+It is a window that shows a thumbnail of the selected area, this thumbnail can be dragged into applications that allow image files to be dropped in.
 
 #### Presets
 Press the 'A' key to save the current selection rectangle as a preset, you will be prompted for a description (mandatory).
 
-![Autosave](images/presetmanager.png)
+![Presets](images/presetmanager.png)
 
-#### Caveats
+#### Portability
+By default settings are saved in the registry (HKCU\Software\toptools.org\ScreenCopy).  
+In case you don't want or cannot write the registry, ScreenCopy can run in "portable" mode:
+Create a file called "ScreenCopy.ini" next to the .exe and it will use that to store settings.
+
+#### Startup Options
+When starting, it will look for the file ScreenCopy.ini in it's program directory. If it is found, it will be used to store settings, else settings will be stored in the registry. 
+
 ScreenCopy, when in the background, has no other user interface then the hotkey.
 Also it is easy to lose track of the grabber-window; when it is too small it can become very hard to find on the screen or to interact with it.  
 
