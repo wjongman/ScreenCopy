@@ -7,6 +7,7 @@
 #include "HotkeyDlg.h"
 #include "PresetsDlg.h"
 #include "TrayIcon.h"
+#include "DragViewWindow.h"
 
 /////////////////////////////////////////////////////////////////////////////
 /// Array of connected monitors
@@ -37,6 +38,7 @@ class CScreenWindow : public CWindowImpl<CScreenWindow, CWindow,
     Hotkey m_hotkey;
     PresetsList m_presetsList;
     UINT WM_TASKBARCREATED;
+    CDragViewWindow m_dragWindow;
 
 public:
     DECLARE_WND_CLASS_EX(L"ScreenCopyWindowClass", 0, COLOR_WINDOW)
@@ -46,9 +48,12 @@ private:
     MESSAGE_HANDLER(WM_CREATE, OnCreate)
     MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
     MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChanging)
+    MESSAGE_HANDLER(WM_SIZING, OnSizing)
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
     MESSAGE_HANDLER(WM_SYSKEYDOWN, OnSysKeyDown)
+    MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnLButtonDoubleClick)
     MESSAGE_HANDLER(CTrayIcon::TRAYICONNOTIFY, OnTrayNotify)
     MESSAGE_HANDLER(WM_TASKBARCREATED, OnTaskbarCreated)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -200,6 +205,82 @@ private:
     }
 
     //-------------------------------------------------------------------------
+    LRESULT OnSizing(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        CRect rcCurrent;
+        GetWindowRect(&rcCurrent);
+        
+        // Constrain dimensions to square when shift key is down
+        bool shift = ::GetKeyState(VK_SHIFT) & 0x8000;
+        if (shift)
+        {
+            // https://stackoverflow.com/questions/20682975/resize-form-and-maintain-aspect-ratio
+            CRect* prcNew = reinterpret_cast<CRect*>(lParam);
+            int FAspectRatio = 1;
+            switch (wParam)
+            {
+            case WMSZ_LEFT:
+            case WMSZ_RIGHT:
+                prcNew->bottom = prcNew->top + (prcNew->Width() / FAspectRatio);
+                break;
+            case WMSZ_TOP:
+            case WMSZ_BOTTOM:
+                prcNew->right = prcNew->left + (prcNew->Height() * FAspectRatio);
+                break;
+
+            case WMSZ_TOPLEFT:
+            case WMSZ_TOPRIGHT:
+            case WMSZ_BOTTOMLEFT:
+            case WMSZ_BOTTOMRIGHT:
+            {
+                bool SizeBasedOnWidth;
+                if (prcNew->Width() > rcCurrent.Width())
+                {
+                    SizeBasedOnWidth = prcNew->Height()
+                        < MulDiv(rcCurrent.Height(), prcNew->Width(), rcCurrent.Width());
+                }
+                else
+                {
+                    SizeBasedOnWidth = prcNew->Width()
+                        > MulDiv(rcCurrent.Width(), prcNew->Height(), rcCurrent.Height());
+                }
+                if (SizeBasedOnWidth)
+                {
+                    int NewHeight = prcNew->Width() / FAspectRatio;
+                    switch (wParam)
+                    {
+                    case WMSZ_TOPLEFT:
+                    case WMSZ_TOPRIGHT:
+                        prcNew->top = prcNew->bottom - NewHeight;
+                        break;
+                    case WMSZ_BOTTOMLEFT:
+                    case WMSZ_BOTTOMRIGHT:
+                        prcNew->bottom = prcNew->top + NewHeight;
+                        break;
+                    }
+                }
+                else
+                {
+                    int NewWidth = prcNew->Height() * FAspectRatio;
+                    switch (wParam)
+                    {
+                    case WMSZ_TOPLEFT:
+                    case WMSZ_BOTTOMLEFT:
+                        prcNew->left = prcNew->right - NewWidth;
+                        break;
+                    case WMSZ_TOPRIGHT:
+                    case WMSZ_BOTTOMRIGHT:
+                        prcNew->right = prcNew->left + NewWidth;
+                        break;
+                    }
+                }
+            }
+            }
+        }
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
     {
         CPoint ptMouse;
@@ -213,6 +294,7 @@ private:
         popupMenu.AppendMenu(MF_SEPARATOR);
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_COPY, L"Copy\t&C");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVE, L"Save\t&S");
+        popupMenu.AppendMenu(MF_STRING, ID_SCREEN_DRAG, L"Drag Area\tDbl-Click");
         popupMenu.AppendMenu(MF_STRING, ID_SCREEN_SAVEAS, L"Save As...\tShift+&S");
         popupMenu.AppendMenu(MF_SEPARATOR);
         AppendPresetMenu(popupMenu);
@@ -273,6 +355,12 @@ private:
         {
             ShowWindow(SW_HIDE);
             SaveScreen();
+            break;
+        }
+        case ID_SCREEN_DRAG:
+        {
+            ShowWindow(SW_HIDE);
+            DragScreen();
             break;
         }
         case ID_SCREEN_SAVEAS:
@@ -359,6 +447,11 @@ private:
             CopyScreen();
             break;
 
+        case 'D':
+            ShowWindow(SW_HIDE);
+            DragScreen();
+            break;
+
         case 'S':
             ShowWindow(SW_HIDE);
             if (::GetKeyState(VK_SHIFT) & 0x8000)
@@ -379,12 +472,13 @@ private:
             ManagePresets();
             break;
 
+        case VK_ESCAPE:
+            ShowWindow(SW_HIDE);
+
         case 'X':
             PostMessage(WM_CLOSE);
             break;
 
-        case VK_ESCAPE:
-            ShowWindow(SW_HIDE);
         }
         MoveWindow(rcClient, false);
 
@@ -410,10 +504,18 @@ private:
             case '7':
             case '8':
             case '9':
-                // 'Alt-1' means preset[0]
+                // 'Alt+1' means preset[0]
                 RestorePreset(wParam - '0' - 1);
             }
         }
+        return 0;
+    }
+
+    //-------------------------------------------------------------------------
+    LRESULT OnLButtonDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        DragScreen();
+        ShowWindow(SW_HIDE);
         return 0;
     }
 
@@ -510,6 +612,7 @@ private:
                 return HTCAPTION;
             }
         }
+        bHandled = false;
         return hit;
     }
 
@@ -527,25 +630,10 @@ private:
     {
         switch (lParam)
         {
-        case WM_LBUTTONUP:
-            HandleTrayMenu();
-//             switch (ShowTrayMenu())
-//             {
-//             case ID_VIEW_RESTORE:
-//                 break;
-//             case ID_VIEW_HOTKEY:
-//                 break;
-//             case ID_VIEW_AUTOSAVE:
-//                 break;
-//             case ID_VIEW_PRESETS:
-//                 break;
-//             case ID_APP_ABOUT:
-//                 break;
-//             case ID_APP_EXIT:
-//                 break;
-//             }
-            break;
         case WM_RBUTTONUP:
+            HandleTrayMenu();
+            break;
+        case WM_LBUTTONUP:
             SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
             ShowWindow(SW_SHOW);
             break;
@@ -770,6 +858,19 @@ private:
     }
 
     //-------------------------------------------------------------------------
+    void DragScreen()
+    {
+        CRect rcWindow;
+        GetWindowRect(&rcWindow);
+        HBITMAP hBmp = GrabScreen(rcWindow);
+        ImageSaver saver;
+        saver.SaveDragImage(hBmp);
+        CPoint ptMouse;
+        GetCursorPos(&ptMouse);
+        ShowDragViewWindow(ptMouse);
+    }
+
+    //-------------------------------------------------------------------------
     void SaveScreenAs()
     {
         CRect rcWindow;
@@ -777,6 +878,27 @@ private:
         HBITMAP hBmp = GrabScreen(rcWindow);
         ImageSaver saver;
         saver.SaveImageAs(hBmp);
+    }
+
+    //-------------------------------------------------------------------------
+    void ShowDragViewWindow(CPoint const& ptShow)
+    {
+        CSettings settings;
+        std::wstring savePath = settings.GetString(L"autosave", L"directory", GetDesktopPath()).c_str();
+
+        CRect rcWindow;
+        GetWindowRect(&rcWindow);
+        if (!m_dragWindow.IsWindow())
+        {
+            m_dragWindow.Create(m_hWnd);
+        }
+        m_dragWindow.SetDragFilePath(savePath + L"\\ScreenCopy.png");
+        if (!m_dragWindow.IsWindowVisible())
+        {
+            CRect rcDrag{ 0, 0, 120, 120 };
+            rcDrag.OffsetRect(ptShow.x - 60, ptShow.y - 60);
+            m_dragWindow.SetWindowPos(HWND_TOP, &rcDrag, SWP_SHOWWINDOW);
+        }
     }
 
     //-------------------------------------------------------------------------

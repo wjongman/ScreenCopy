@@ -13,6 +13,9 @@
       <UniqueIdentifier>{293b1229-b028-4545-80a5-b3939d1df786}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest</Extensions>
     </Filter>
+    <Filter Include="Documents">
+      <UniqueIdentifier>{5b7cd65c-2791-410e-aa44-235616374536}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -65,6 +68,15 @@
     <ClInclude Include="TrayIcon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DragViewWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DragSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Clipboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ScreenCopy.rc">
@@ -80,7 +92,13 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\cursor1.cur">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="..\readme.md">
+      <Filter>Documents</Filter>
+    </None>
+    <None Include="res\drag.cur">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

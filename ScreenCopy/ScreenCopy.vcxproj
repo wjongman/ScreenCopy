@@ -149,7 +149,6 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <DebugInformationFormat />
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <Optimization>MinSpace</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -211,6 +210,9 @@
   <ItemGroup>
     <ClInclude Include="about.h" />
     <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="Clipboard.h" />
+    <ClInclude Include="DragSource.h" />
+    <ClInclude Include="DragViewWindow.h" />
     <ClInclude Include="ImageSaver.h" />
     <ClInclude Include="AutoSaveDlg.h" />
     <ClInclude Include="HotkeyDlg.h" />
@@ -233,6 +235,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\readme.md" />
+    <None Include="res\cursor1.cur" />
+    <None Include="res\drag.cur" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

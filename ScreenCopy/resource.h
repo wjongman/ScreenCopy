@@ -8,6 +8,7 @@
 #define IDD_HOTKEYDLG                   202
 #define IDD_MANAGEPRESETSDLG            207
 #define IDD_EDITPRESETDLG               209
+#define IDC_DRAG                        210
 #define IDC_EDIT_DIRECTORY              1066
 #define IDC_BROWSE                      1067
 #define IDC_EDIT_PREFIX                 1068
@@ -34,10 +35,11 @@
 #define IDC_PRESET_MOVEUP               1097
 #define IDC_PRESET_MOVEDOWN             1098
 #define IDC_PRESET_RESTORE              1099
-#define ID_SCREEN_COPY                  32775
+#define ID_SCREEN_COPY                  32774
+#define ID_SCREEN_DRAG                  32775
 #define ID_SCREEN_SAVE                  32776
 #define ID_SCREEN_SAVEAS                32777
-#define ID_VIEW_AUTOSAVE                 32778
+#define ID_VIEW_AUTOSAVE                32778
 #define ID_VIEW_CLOSE                   32779
 #define ID_VIEW_HOTKEY                  32780
 #define ID_VIEW_PRESETS                 32781

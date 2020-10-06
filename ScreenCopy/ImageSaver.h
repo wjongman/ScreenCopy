@@ -68,6 +68,13 @@ public:
         DeleteObject(hBmp);
     }
 
+    //---------------------------------------------------------------------------
+    void SaveDragImage(HBITMAP hBmp)
+    {
+        SaveDragBitmap(hBmp);
+        DeleteObject(hBmp);
+    }
+
 private:
     //---------------------------------------------------------------------------
     void __fastcall LoadOptions()
@@ -225,6 +232,21 @@ private:
 
         DoSave(hBitmap, GetNextPathName(), GetMimeType(m_imageType));
         m_nextValue++;
+    }
+
+    //---------------------------------------------------------------------------
+    void SaveDragBitmap(HBITMAP hBitmap)
+    {
+        // First check if the target directory exists
+        if (!DirectoryExists(m_directory))
+        {
+            // TODO: offer to change or create directory here..
+            // TODO: stuff all static strings in a resource file
+            CString message = L"Your autosave settings refer to a directory that doesn't exist:\n" + m_directory + L"\n";
+            MessageBox(NULL, message, L"Auto save", MB_OK);
+            return;
+        }
+        DoSave(hBitmap, m_directory + L"//ScreenCopy.png", L"image/png");
     }
 
     //-------------------------------------------------------------------------
