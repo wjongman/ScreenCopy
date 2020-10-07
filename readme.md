@@ -13,15 +13,15 @@ All features are accessable via the right-click context menu or via the keyboard
 #### Hotkey
 When started for the first time, you will be asked to select the hotkey used to activate the screengrabber.
 
-#### AutoSave
-When auto-saving a file you will not be prompted for a filename, instead the file will be saved in a definable location with a definable filename (default: user desktop).
-
-![Autosave](images/autosave.png)
 #### Drag Area
 Double clicking the selection window will transfer the selection to the "Drag Area".
 This is a window that shows a thumbnail of the selected area, this thumbnail can be dragged into applications that allow image files to be dropped in.
 
 ![Drag Area](images/dragarea.png)
+#### AutoSave
+When auto-saving a file you will not be prompted for a filename, instead the file will be saved in a definable location with a definable filename (default: user desktop).
+
+![Autosave](images/autosave.png)
 #### Portability
 By default settings are saved in the registry (HKCU\Software\toptools.org\ScreenCopy).  
 In case you don't want or cannot write the registry, ScreenCopy can run in "portable" mode:
