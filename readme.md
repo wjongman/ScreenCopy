@@ -1,4 +1,4 @@
-# ScreenCopy ![Icon](ScreenCopy/res/ScreenCopy.ico)
+# ScreenCopy <img src="ScreenCopy/res/ScreenCopy.ico" width="48">
 A Windows desktop program that can take a snapshot of the screen and either save it to file, copy it to the clipboard or show it in a window from which it can be dragged into another application.  
 Autosave features make it easy to capture a sequence of views with a minimum of keystrokes.  
 When active it shows a sizeable, transparent window that can be positioned accurately by using the mouse or the keyboard arrow-keys.  
